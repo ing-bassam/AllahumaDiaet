@@ -60,6 +60,21 @@ describe('calculateCalorieGoal', () => {
     });
     assert.ok(goal.dailyGoal >= goal.bmr);
   });
+
+  it('bleibt auch nach dem Runden auf 10 kcal über dem Grundumsatz und weist das echte Defizit aus', () => {
+    // Grundumsatz 1131,5 → Gesamtbedarf 1584,1. Minus 500 läge darunter, und 1131,5 rundet auf 1130 ab.
+    const goal = calculateCalorieGoal({
+      age: 55,
+      sex: 'female',
+      heightCm: 158,
+      weightKg: 58,
+      goalWeightKg: 52,
+      activityLevel: 'sedentary',
+    });
+    assert.equal(goal.bmr, 1132);
+    assert.equal(goal.dailyGoal, 1140);
+    assert.equal(goal.adjustment, -453);
+  });
 });
 
 describe('Makros', () => {

@@ -75,9 +75,13 @@ export function calculateCalorieGoal(input: GoalInput): CalorieGoal {
   if (weightDiff <= -1) adjustment = LOSE_WEIGHT_ADJUSTMENT;
   else if (weightDiff >= 1) adjustment = GAIN_WEIGHT_ADJUSTMENT;
 
-  // Nie unter den Grundumsatz gehen.
-  const dailyGoal = roundTo(Math.max(tdee + adjustment, bmr), 10);
-  return { bmr: Math.round(bmr), tdee: Math.round(tdee), adjustment, dailyGoal };
+  const target = tdee + adjustment;
+  // Nie unter den Grundumsatz gehen – auch nicht durch das Runden auf 10 kcal. Die Untergrenze ist
+  // deshalb der auf 10 kcal aufgerundete angezeigte Grundumsatz.
+  const dailyGoal = Math.max(roundTo(target, 10), Math.ceil(Math.round(bmr) / 10) * 10);
+  // Greift die Untergrenze, das tatsächliche Defizit ausweisen statt der nominellen 500 kcal.
+  const effectiveAdjustment = target < bmr ? Math.round(bmr - tdee) : adjustment;
+  return { bmr: Math.round(bmr), tdee: Math.round(tdee), adjustment: effectiveAdjustment, dailyGoal };
 }
 
 export function macroGoalsInGrams(dailyCalories: number, split: MacroSplit): MacroSplit {
