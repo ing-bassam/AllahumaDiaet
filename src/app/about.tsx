@@ -106,8 +106,8 @@ export default function About() {
 
       <Section title="Datenquellen">
         <Text style={styles.body}>
-          Produktdaten: <LinkText label="Open Food Facts" url={LEGAL_URLS.openFoodFacts} />, lizenziert unter der{' '}
-          <LinkText label="Open Database License (ODbL)" url={LEGAL_URLS.odbl} />
+          Enthält Produktdaten von <LinkText label="Open Food Facts" url={LEGAL_URLS.openFoodFacts} />, die gemäß der{' '}
+          <LinkText label="Open Database License (ODbL)" url={LEGAL_URLS.odbl} /> zur Verfügung gestellt werden.
         </Text>
         <Text style={[styles.body, styles.lineSpacing]}>
           Produktbilder: <LinkText label="Open Food Facts" url={LEGAL_URLS.openFoodFacts} />, lizenziert unter{' '}
