@@ -1,7 +1,7 @@
 // SQL der Schema-Versionen, ohne React-Native-Abhängigkeiten, damit tests/migrations.test.ts
 // es mit node:sqlite gegen echte Datenbanken prüfen kann. Ausgeführt wird es in schema.ts.
 
-/** Version 1: Ausgangsschema der ersten App-Version (neue Installation). */
+/** Version 1: Ausgangsschema der ersten App-Version (neue Installation). Muss in einer Transaktion laufen; setzt user_version selbst. */
 export const SCHEMA_V1_SQL = `
   CREATE TABLE user_profile (
     id TEXT PRIMARY KEY NOT NULL,
@@ -96,3 +96,10 @@ export const UPSERT_FOOD_ITEM_SQL = `
     source = excluded.source
   WHERE food_item.user_edited = 0
 `;
+
+/**
+ * Entfernt gelöschte Zeilen auch physisch aus der Datenbankdatei. Läuft nach dem Löschen, außerhalb
+ * einer Transaktion. Die Reihenfolge zählt: Im WAL-Modus schreibt VACUUM die bereinigte Datenbank
+ * nur ins WAL; erst der Checkpoint danach überschreibt und kürzt die Hauptdatei und leert das WAL.
+ */
+export const SCRUB_DELETED_DATA_SQL = 'VACUUM; PRAGMA wal_checkpoint(TRUNCATE);';

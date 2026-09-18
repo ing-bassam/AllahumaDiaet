@@ -15,7 +15,11 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   if (currentVersion === 0) {
     // Neue, leere Datenbank. journal_mode lässt sich nicht innerhalb einer Transaktion ändern.
     await db.execAsync('PRAGMA journal_mode = WAL;');
-    await db.execAsync(SCHEMA_V1_SQL);
+    // Alles oder nichts, wie unten: Sonst bliebe nach einem Abbruch user_version auf 0, während die
+    // ersten Tabellen schon existieren, und jeder weitere Start scheiterte an „table already exists“.
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      await txn.execAsync(SCHEMA_V1_SQL);
+    });
     currentVersion = 1;
   }
 
