@@ -20,6 +20,7 @@ import {
   type ActivityLevel,
   type Sex,
 } from '../lib/nutrition';
+import { MEDICAL_DISCLAIMER } from '../legal/sources';
 import { colors, radius, spacing } from '../theme';
 
 type Range = { min: number; max: number };
@@ -207,12 +208,14 @@ export default function Onboarding() {
           Alle Angaben bleiben ausschließlich auf deinem Gerät. Es gibt kein Konto und keine Werbung. Beim Scannen und bei der
           Online-Suche wird nur der Barcode bzw. Suchbegriff an Open Food Facts gesendet, um das Produkt zu finden.
         </Text>
-        <Text style={styles.note}>Die Berechnung ist ein Richtwert und ersetzt keine ärztliche Beratung.</Text>
-        {hasProfile && (
-          <Pressable onPress={() => router.push('/about')} hitSlop={8} style={styles.aboutLink} accessibilityRole="link">
-            <Text style={styles.aboutLinkText}>Info & Rechtliches</Text>
-          </Pressable>
-        )}
+        <Text style={styles.note}>
+          Berechnet wird der Grundumsatz nach der Formel von Mifflin-St. Jeor, multipliziert mit dem PAL-Faktor deines
+          Aktivitätslevels nach den Referenzwerten der Deutschen Gesellschaft für Ernährung.
+        </Text>
+        <Text style={styles.note}>{MEDICAL_DISCLAIMER}</Text>
+        <Pressable onPress={() => router.push('/about')} hitSlop={8} style={styles.aboutLink} accessibilityRole="link">
+          <Text style={styles.aboutLinkText}>{hasProfile ? 'Quellen, Info & Rechtliches' : 'Quellen der Berechnung ansehen'}</Text>
+        </Pressable>
       </ScrollView>
 
       <NumericDoneBar />

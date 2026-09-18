@@ -119,9 +119,11 @@ export default function Dashboard() {
     [db],
   );
 
-  /** Wechselt den Tag mit Gleitanimation: alter Inhalt hinaus, neuer von der anderen Seite herein. */
-  // Worklets koennen keine Date-Objekte kopieren, deshalb wandert nur der Zeitstempel ueber die Grenze.
-  const applyDay = useCallback(
+  /**
+   * Zeigt den neuen Tag: Er startet am gegenueberliegenden Rand und gleitet herein.
+   * Worklets koennen keine Date-Objekte kopieren, deshalb wandert nur der Zeitstempel ueber die Grenze.
+   */
+  const showDay = useCallback(
     (nextTime: number, direction: number) => {
       setSelectedDate(startOfDay(new Date(nextTime)));
       translateX.value = direction * width;
@@ -130,6 +132,15 @@ export default function Dashboard() {
     [translateX, width],
   );
 
+  /** Nach der Wischgeste: Der alte Inhalt ist schon draussen, jetzt nur noch den neuen Tag zeigen. */
+  const commitStep = useCallback(
+    (direction: number) => {
+      showDay(addDays(selectedRef.current, direction).getTime(), direction);
+    },
+    [showDay],
+  );
+
+  /** Fuer Pfeile und Kalender: erst hinausgleiten, dann den neuen Tag zeigen. */
   const slideToDay = useCallback(
     (next: Date) => {
       setCalendarOpen(false);
@@ -138,10 +149,10 @@ export default function Dashboard() {
       const direction = next > selectedRef.current ? 1 : -1;
       const nextTime = startOfDay(next).getTime();
       translateX.value = withTiming(-direction * width, { duration: SLIDE_OUT_MS }, (finished) => {
-        if (finished) runOnJS(applyDay)(nextTime, direction);
+        if (finished) runOnJS(showDay)(nextTime, direction);
       });
     },
-    [applyDay, translateX, width],
+    [showDay, translateX, width],
   );
 
   const stepDay = useCallback((direction: number) => slideToDay(addDays(selectedRef.current, direction)), [slideToDay]);
@@ -169,13 +180,13 @@ export default function Dashboard() {
           // Nach links wischen zeigt den nächsten Tag.
           const direction = event.translationX < 0 ? 1 : -1;
           translateX.value = withTiming(-direction * width, { duration: SLIDE_OUT_MS }, (finished) => {
-            if (finished) runOnJS(stepDay)(direction);
+            if (finished) runOnJS(commitStep)(direction);
           });
         })
         .onFinalize(() => {
           fromEdge.value = false;
         }),
-    [fromEdge, stepDay, translateX, width],
+    [commitStep, fromEdge, translateX, width],
   );
 
   const contentStyle = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));

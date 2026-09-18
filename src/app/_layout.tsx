@@ -4,7 +4,7 @@ import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 
 import { DATABASE_NAME, migrateDbIfNeeded } from '../db/schema';
-import { colors, radius } from '../theme';
+import { colors } from '../theme';
 
 export default function RootLayout() {
   return (
@@ -27,17 +27,13 @@ export default function RootLayout() {
           <Stack.Screen name="search" options={{ headerShown: false }} />
           {/* Eigene Kopfzeile, damit die Tastatur den Speichern-Button nicht verdeckt. */}
           <Stack.Screen name="product/[barcode]" options={{ headerShown: false }} />
-          {/* Feste Höhe statt 'fitToContents': Der Inhalt scrollt und nutzt flex: 1. */}
-          <Stack.Screen
-            name="entry/[id]"
-            options={{
-              presentation: 'formSheet',
-              headerShown: false,
-              sheetAllowedDetents: [0.92],
-              sheetGrabberVisible: true,
-              sheetCornerRadius: radius.lg,
-            }}
-          />
+          {/*
+            Bewusst kein formSheet: react-native-screens meldet im Sheet keine Tastatur-Ereignisse
+            (RNSScreen.mm: "TODO: register for UIKeyboard notifications"). Dort bleibt jede
+            Tastaturbehandlung kaputt. Als normaler Screen, der von unten hereingleitet, sieht es
+            aehnlich aus und die Tastatur verhaelt sich wie im Produkt-Screen.
+          */}
+          <Stack.Screen name="entry/[id]" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         </Stack>
       </SQLiteProvider>
     </GestureHandlerRootView>

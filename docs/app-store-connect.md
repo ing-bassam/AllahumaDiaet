@@ -1,4 +1,4 @@
-# App Store Connect – Checkliste für HALABI
+# App Store Connect – Checkliste für Hachibu
 
 > **Arbeitsdokument, keine Rechtsberatung.** Wird nicht über GitHub Pages veröffentlicht (`_config.yml` → `exclude`).
 > Alle offenen Punkte sind mit TODO markiert. Stand der Apple-Vorgaben: 15.09.2026 – vor dem Einreichen in App Store Connect gegenprüfen.
@@ -7,22 +7,38 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 
 ## 1. Apple Developer Program
 
-- [ ] Mitgliedschaft im [Apple Developer Program](https://developer.apple.com/programs/) als **Einzelperson** abschließen (99 USD/Jahr). Der dort angegebene Name erscheint im App Store als Anbieter.
-      <!-- TODO: Entscheiden, auf welchen Namen das Konto läuft (Karim Abu Elkheir?). -->
+- [x] Mitgliedschaft im [Apple Developer Program](https://developer.apple.com/programs/) ist bezahlt (deine Angabe, 17.09.2026).
+- [ ] Kontotyp im [Developer-Portal](https://developer.apple.com/account) unter *Membership details* nachsehen:
+  - **Einzelperson (Individual):** Anbietername im App Store ist dein eigener Name, also Karim Abu Elkheir. So ist Hachibu geplant.
+  - **Organisation:** nur mit eingetragener Rechtsform und D-U-N-S-Nummer möglich. Ein Wechsel ist später nur über den Apple-Support möglich, deshalb jetzt bewusst entscheiden.
 - [ ] Zwei-Faktor-Authentifizierung für die Apple-ID aktiv.
 
 ## 2. App in App Store Connect anlegen
 
 - [ ] *Apps → + → Neue App*
   - Plattform: iOS
-  - Name: **HALABI** <!-- TODO: Prüfen, ob der Name im App Store noch frei ist und keine Markenrechte Dritter verletzt (z. B. Recherche im DPMA-Register und EUIPO). -->
+  - Name (App-Store-Name, max. 30 Zeichen): **Hachibu** – geprüft und frei, siehe *2a. Namensprüfung*. Derselbe Name steht auf dem Homescreen (`app.json` → `name`).
   - Primäre Sprache: Deutsch
-  - Bundle-ID: **com.abdelkarim.allahumadiaet** (muss zuerst unter *Certificates, Identifiers & Profiles* existieren – `eas build` legt sie beim ersten Build an)
-  - SKU: frei wählbar, z. B. `halabi-ios`
+  - Bundle-ID: **com.abdelkarim.hachibu** (`app.json` → `ios.bundleIdentifier`; muss zuerst unter *Certificates, Identifiers & Profiles* existieren – `eas build` legt sie beim ersten Build an). **Nach dem ersten Upload nicht mehr änderbar**, siehe *2b. Bundle-ID*.
+  - SKU: frei wählbar, z. B. `hachibu-ios`
   - Benutzerzugriff: Vollzugriff
 - [ ] Unter *App-Informationen → Allgemeine Informationen* die **Apple-ID** (nur Ziffern) ablesen und in `eas.json` bei `submit.production.ios.ascAppId` statt `TODO_ASC_APP_ID` eintragen.
 - [ ] Kategorie: **Gesundheit & Fitness** (primär). Sekundär optional, z. B. *Essen & Trinken*.
 - [ ] Copyright: `2026 Karim Abu Elkheir` <!-- TODO: bestätigen -->
+
+## 2a. Namensprüfung (Stand 17.09.2026)
+
+- App-Store-Namen sind weltweit eindeutig. Ist ein Name vergeben, lässt App Store Connect ihn nicht mehr reservieren; Groß- und Kleinschreibung macht dabei keinen Unterschied.
+- Geprüft über die öffentliche Suchschnittstelle von Apple (`https://itunes.apple.com/search?term=hachibu&entity=software`, Storefronts Deutschland und USA): **kein Treffer**. „Hachibu“ ist als App-Store-Name frei.
+- Name: **`Hachibu`** (7 von 30 Zeichen), Untertitel `Kalorien scannen & zählen`. Ein beschreibender Zusatz im Namen ist nicht nötig, weil Apple den Untertitel ohnehin mit indexiert. Guideline 2.3.7 (kein Keyword-Stapeln) ist damit unproblematisch, Guideline 2.3.8 ebenfalls, weil der Name auf dem Gerät identisch ist.
+- Vorgeschichte: Der frühere Arbeitsname „Halabi“ war im App Store schon von einer anderen App belegt (Anbieter Yaseen Halabi, Social Networking). Das war der Anlass für den Wechsel auf Hachibu.
+- [ ] Markenrecherche vor dem Anlegen: [DPMAregister](https://register.dpma.de/DPMAregister/marke/experte), [EUIPO eSearch](https://euipo.europa.eu/eSearch/) und [TMview](https://www.tmdn.org/tmview/) nach „Hachibu“ in Klasse 9 (Software) und 42/44 durchsuchen. Als Fantasiewort ist das Risiko geringer als bei einem Familiennamen, aber die Prüfung bleibt nötig: Bei einer Markenbeschwerde entfernt Apple die App. Die Register lassen sich nur von Hand durchsuchen, und die Bewertung des Ergebnisses ist Rechtsberatung.
+
+## 2b. Bundle-ID (Entscheidung, die bleibt)
+
+- Die Bundle-ID entsteht beim ersten Build und ist danach **dauerhaft**: Sie lässt sich für eine eingereichte App nicht mehr ändern. Ein anderer Wert bedeutet später eine neue App mit neuer Apple-ID – bestehende Installationen bekommen dann keine Updates. Für Android gilt dasselbe für `android.package` ab der ersten Veröffentlichung.
+- [x] **Entschieden am 17.09.2026:** `com.abdelkarim.hachibu`, eingetragen in `app.json` unter `ios.bundleIdentifier` **und** `android.package`. Der alte Wert `com.abdelkarim.allahumadiaet` stammte aus dem früheren Projektnamen und ist ersetzt, solange noch kein Build hochgeladen war.
+- Ab dem ersten `eas build` bleibt dieser Wert unverändert.
 
 ## 3. URLs
 
@@ -58,7 +74,8 @@ Beim Scannen gehen der Barcode und die IP-Adresse an die Open-Food-Facts-API, be
 - **Suchbegriffe** fallen ziemlich direkt unter Apples Datentyp *Suchverlauf* („Informationen über Suchen in der App“). Seit es die Online-Suche gibt, ist „Keine Daten erfasst“ deshalb schwerer zu begründen als vorher, als nur Barcodes übertragen wurden.
 - Die lokale Suche, „Zuletzt verwendet“ und „Häufig gegessen“ bleiben auf dem Gerät und sind keine Erfassung.
 
-<!-- TODO: Entscheiden, ob „Keine Daten erfasst“ noch vertretbar ist. Empfohlene, vorsichtigere Angabe: „Suchverlauf“ – nicht mit der Identität verknüpft, nicht für Tracking, Zweck „App-Funktionalität“. Die Angaben müssen zur Datenschutzerklärung (docs/datenschutz.md, Abschnitt 5a) passen. -->
+- [ ] Entscheiden. **Empfehlung: „Suchverlauf“ angeben** – nicht mit der Identität verknüpft, nicht für Tracking, Zweck „App-Funktionalität“. Das ist die vorsichtigere Variante und passt zu Abschnitt 5a der Datenschutzerklärung. Eine zu knappe Angabe ist ein häufiger Ablehnungsgrund nach Guideline 5.1.2, eine zu vorsichtige nicht.
+- [ ] Angaben, Datenschutzerklärung und (später) das Datensicherheits-Formular bei Google Play müssen dasselbe sagen. Wird eine Stelle geändert, die anderen mitziehen.
 
 ## 5. Altersfreigabe
 
@@ -90,9 +107,42 @@ Eher **kein** Händler: Hobby-Entwickler ohne Absicht, mit der App Geld zu verdi
 - **Als Nicht-Händler** werden keine Kontaktdaten veröffentlicht. EU-Kunden wird angezeigt, dass Verbraucherschutzrechte gegenüber dir nicht gelten.
 - Der Status lässt sich pro App ändern: *App-Informationen → App Store Regulations and Permits → Digital Services Act*.
 
-<!-- TODO: Selbst einschätzen (ggf. mit rechtlicher Beratung), ob du Händler bist. HALABI ist kostenlos und werbefrei; Apple kann den Status nicht für dich bestimmen. -->
+**Wichtig, falls Händlerstatus:** Für die veröffentlichte Anschrift akzeptiert Apple auch ein **Postfach**. Deine Wohnadresse muss also nicht auf der App-Store-Seite stehen. Apple selbst braucht trotzdem verifizierbare Daten; Telefonnummer und E-Mail werden per Code bestätigt und bei Händlerstatus mitveröffentlicht.
 
-## 7. Screenshots
+- [ ] Angabe im Dashboard machen. Ohne Händlerangabe bietet Apple Apps in den EU-Storefronts nicht an – das gilt unabhängig davon, wie die Antwort ausfällt.
+
+<!-- TODO (Einschätzung durch dich, ggf. mit rechtlicher Beratung): Hachibu ist kostenlos, werbefrei, ohne In-App-Käufe und ohne Einnahmen – das spricht gegen Händlerstatus. Apple darf den Status nicht für dich bestimmen. -->
+
+## 7. Häufige Ablehnungsgründe und wie Hachibu sie abdeckt
+
+### Guideline 4.3(a) – Spam in einer überfüllten Kategorie
+
+Kalorienzähler gibt es hunderte. Apple lehnt Apps ab, die sich von vorhandenen kaum unterscheiden, und besonders Apps aus Baukästen oder Vorlagen. Was Hachibu unterscheidet und was deshalb in Beschreibung und Prüfnotizen gehört:
+
+- Kein Konto, keine Anmeldung, kein Abo, keine In-App-Käufe, keine Werbung, kein Tracking – bei den großen Anbietern fast immer anders.
+- Alle Daten liegen in einer lokalen SQLite-Datenbank, es gibt keinen Server des Anbieters.
+- Einmal gescannte Produkte funktionieren danach offline weiter, inklusive eigener Korrekturen der Nährwerte.
+- Deutschsprachige Oberfläche und deutsche Produktdaten aus Open Food Facts.
+- Eigener Code, keine Vorlage, keine zweite ähnliche App im Konto.
+
+### Guideline 1.4.1 – Gesundheit: Berechnungen brauchen belegte Quellen
+
+Apple verlangt für Apps, die Gesundheitswerte berechnen, nachvollziehbare medizinische Grundlagen. Das ist abgedeckt:
+
+- `src/legal/sources.ts` enthält den Rechenweg in vier Schritten und vier Quellen: Mifflin-St Jeor (Am J Clin Nutr 1990), PAL-Faktoren der Deutschen Gesellschaft für Ernährung, S3-Leitlinie Adipositas (AWMF 050-001) für das Defizit, Verordnung (EU) 1169/2011 Anhang XIV für 4/4/9 kcal je Gramm.
+- In der App sichtbar unter *Info & Rechtliches → Berechnung & Quellen* mit Links, außerdem beim Anlegen des Profils.
+- Der Hinweis „Richtwerte für gesunde Erwachsene, ersetzt keine ärztliche oder ernährungsfachliche Beratung“ steht an beiden Stellen.
+- Keine Diagnosen, keine Behandlungs- oder Medikamentenhinweise, keine Messung von Vitalwerten.
+- Das Profil ist erst ab 18 Jahren möglich (`LIMITS.age` in `src/lib/nutrition.ts`), damit keine Kalorienziele für Kinder und Jugendliche berechnet werden.
+
+### Metadaten und Berechtigungen
+
+- [ ] Berechtigungstext prüfen: `NSCameraUsageDescription` entsteht aus dem `expo-camera`-Plugin in `app.json` und lautet „Die Kamera wird nur zum Scannen von Barcodes auf Lebensmitteln verwendet.“ Ein Text, der den Zweck nicht erklärt, ist ein klassischer Ablehnungsgrund (Guideline 5.1.1). Das Mikrofon ist im Plugin ausdrücklich abgeschaltet, deshalb fragt die App es nie ab.
+- [ ] Screenshots ohne echte persönliche Daten, ohne Gerätrahmen mit fremden Marken und ohne Text, der im Store-Text nichts verspricht.
+- [ ] Keine Heilversprechen, keine Vergleiche mit anderen Apps, kein „Beta“, kein „Demo“, keine Platzhaltertexte in Store-Texten und in der App.
+- [ ] Support- und Datenschutz-URL müssen erreichbar sein, bevor du einreichst. Eine 404-Seite führt zuverlässig zur Ablehnung – GitHub Pages also vorher aktivieren.
+
+## 8. Screenshots
 
 Anforderungen laut Apple (Stand siehe oben):
 
@@ -103,12 +153,12 @@ Anforderungen laut Apple (Stand siehe oben):
 Vorschlag für 5–6 Motive: Dashboard mit Kalorienring · Scanner · Eintragen mit Mengeneingabe · Suche mit „Zuletzt verwendet“ · Eintrag bearbeiten · Profil mit Tagesziel.
 <!-- TODO: Screenshots mit Beispieldaten erstellen (z. B. im iOS-Simulator über einen Mac-Dienst oder vom eigenen iPhone). Keine echten persönlichen Daten zeigen. -->
 
-## 8. Notizen für die App-Prüfung
+## 9. Notizen für die App-Prüfung
 
 Unter *Versionsinformationen → App Review Information → Notizen* einfügen:
 
 ```text
-HALABI ist ein Kalorien- und Makrotracker nach dem Prinzip „Scannen und eintragen“.
+Hachibu ist ein Kalorien- und Makrotracker nach dem Prinzip „Scannen und eintragen“.
 
 - Kein Login erforderlich, keine Konten, keine In-App-Käufe, keine Werbung.
 - Alle Nutzerdaten werden ausschließlich lokal auf dem Gerät gespeichert (SQLite).
@@ -136,6 +186,17 @@ Weitere Funktionen:
 
 Die Kamera-Berechtigung wird nur für das Scannen von Barcodes verwendet.
 Daten löschen: Startbildschirm → „Info & Rechtliches“ → „Alle Daten löschen“.
+
+Berechnung des Kalorienziels (zu Guideline 1.4.1):
+- Grundumsatz nach Mifflin-St Jeor, Am J Clin Nutr 1990;51:241-247 (doi:10.1093/ajcn/51.2.241)
+- Gesamtumsatz über die PAL-Faktoren der Deutschen Gesellschaft für Ernährung
+- Defizit 500 kcal beim Abnehmen, Überschuss 300 kcal beim Zunehmen, nie unter dem Grundumsatz
+- Makronährstoffe mit 4/4/9 kcal je Gramm nach Verordnung (EU) 1169/2011 Anhang XIV
+
+Methode und Quellen sind in der App sichtbar: „Info & Rechtliches“ → „Berechnung & Quellen“,
+außerdem beim Anlegen des Profils. Die App stellt keine Diagnosen und gibt keine
+Behandlungsempfehlungen. Ein Hinweis auf ärztliche Beratung ist an beiden Stellen sichtbar.
+Ein Profil ist erst ab 18 Jahren möglich.
 ```
 
 Die drei Barcodes wurden am 15.09.2026 (zweimal) über die Open-Food-Facts-API mit der App-eigenen Funktion `fetchProduct`/`parseProduct` geprüft; alle lieferten `status: found` mit vollständigen Nährwerten. Open Food Facts wird von Freiwilligen gepflegt – vor dem Einreichen kurz in der App gegenprüfen.
@@ -143,19 +204,21 @@ Die drei Barcodes wurden am 15.09.2026 (zweimal) über die Open-Food-Facts-API m
 - [ ] Kontaktdaten für die App-Prüfung (Name, Telefon, E-Mail) ausfüllen. Diese sind nur für Apple sichtbar.
 - [ ] Anmeldung erforderlich: **Nein**.
 
-## 9. Store-Texte (Entwurf, Deutsch)
+## 10. Store-Texte (Entwurf, Deutsch)
 
 Ohne Heilversprechen und ohne medizinische Aussagen.
 
-**Name** (max. 30 Zeichen): `HALABI`
+**Name** (max. 30 Zeichen, 7 genutzt): `Hachibu`
 
 **Untertitel** (max. 30 Zeichen, 25 genutzt): `Kalorien scannen & zählen`
 
-**Keywords** (max. 100 Bytes, Umlaute zählen doppelt; 98 Bytes genutzt, ohne App-Namen):
+**Keywords** (max. 100 Bytes, Umlaute zählen doppelt; 95 Bytes genutzt):
 
 ```text
-Kalorienzähler,Kalorien,Makros,Barcode,Scanner,Ernährung,Protein,Nährwerte,Lebensmittel,Tracker
+Kalorienzähler,Makros,Barcode,Scanner,Ernährung,Protein,Nährwerte,Lebensmittel,Diät,Tracker
 ```
+
+Apple sucht auch in Name und Untertitel. „Kalorien“, „scannen“ und „zählen“ stehen deshalb nicht in den Keywords – der Untertitel deckt sie ab. Weil der Name selbst kein beschreibendes Wort enthält, steht „Tracker“ hier.
 
 **Werbetext** (optional, max. 170 Zeichen):
 
@@ -166,7 +229,7 @@ Barcode scannen, Menge eintippen, fertig: Kalorien und Makros in Sekunden erfass
 **Beschreibung** (max. 4000 Zeichen):
 
 ```text
-HALABI macht das Erfassen von Kalorien und Makronährstoffen so schnell wie möglich: App öffnen, Barcode scannen, Menge eintippen, speichern. Mehr nicht.
+Hachibu macht das Erfassen von Kalorien und Makronährstoffen so schnell wie möglich: App öffnen, Barcode scannen, Menge eintippen, speichern. Mehr nicht.
 
 SCANNEN UND EINTRAGEN
 • Barcode-Scanner für EAN, UPC und QR-Codes auf Lebensmittelverpackungen
@@ -203,11 +266,28 @@ Produktdaten und -bilder: Open Food Facts (ODbL / CC BY-SA).
 
 <!-- TODO: Texte final prüfen. Keine Aussagen wie „hilft beim Abnehmen“, „gesünder leben“ o. Ä. ergänzen. -->
 
-## 10. Build und Einreichen
+## 11. Build und Einreichen
 
-- [ ] `eas login`, `eas init` (siehe README, Abschnitt „Veröffentlichen“; `eas.json` liegt schon vor, `eas build:configure` ist daher nicht nötig)
-- [ ] `eas build --platform ios --profile production`
+Vorher, alles ohne Apple-Konto prüfbar:
+
+- [ ] `npm test` und `npm run typecheck` laufen durch.
+- [ ] `npx expo-doctor` ohne Beanstandung.
+- [ ] `npx expo export --platform ios` baut das JS-Bundle fehlerfrei.
+- [x] `ios.supportsTablet: false` – dadurch prüft Apple nicht auf dem iPad und iPad-Screenshots entfallen. Wer später Tablets unterstützen will, braucht ein iPad-taugliches Layout **und** eigene Screenshots.
+- [x] `ios.config.usesNonExemptEncryption: false` – daraus wird `ITSAppUsesNonExemptEncryption` in der Info.plist. Die Frage zur Exportkontrolle ist damit beantwortet, ohne dass du sie bei jedem Build erneut ausfüllst. Korrekt, weil die App nur HTTPS des Betriebssystems nutzt und keine eigene Verschlüsselung enthält.
+
+Dann EAS (siehe README, Abschnitt „Veröffentlichen“):
+
+- [ ] `eas login` – **braucht deinen eigenen Expo-Zugang**, den ich nicht anlege und nicht eingebe.
+- [ ] `eas init` (`eas.json` liegt schon vor, `eas build:configure` entfällt). Danach den `slug` in `app.json` nicht mehr ändern.
+- [ ] `eas build --platform ios --profile production` – legt beim ersten Lauf Bundle-ID, Zertifikat und Provisioning-Profil an. Vorher Abschnitt 2b entscheiden.
+- [ ] **TestFlight-Test auf dem eigenen iPhone, bevor du einreichst** (*Internes Testen*, eigene Apple-ID als Tester). Zu prüfen: Kamera-Dialog samt Berechtigungstext, Splash-Screen, App-Icon auf dem Homescreen, Tastatur beim Ändern der Nährwerte, Tageswechsel, „Alle Daten löschen“. Ein Debug-Build im Expo Go verhält sich beim Splash-Screen und bei Berechtigungen anders als ein Release-Build – dieser Test ersetzt keine Ablehnung, verhindert aber die häufigsten.
 - [ ] `eas submit --platform ios --profile production`
-- [ ] Build in App Store Connect der Version zuordnen, Exportkontrolle ist über `usesNonExemptEncryption: false` bereits beantwortet.
-- [ ] Optional vorher per **TestFlight** auf dem eigenen iPhone testen (Kamera, Tastatur, Splash-Screen, Icon).
+- [ ] Build in App Store Connect der Version zuordnen.
 - [ ] *Zur Prüfung einreichen*.
+
+## 12. Später: Google Play
+
+- [ ] `android.package` ist ab der ersten Veröffentlichung dauerhaft – dieselbe Entscheidung wie in Abschnitt 2b.
+- [ ] Das **Datensicherheits-Formular** muss die ML-Kit-Diagnosedaten von Google abbilden (siehe `docs/datenschutz.md`, Abschnitt 4) und zur Datenschutzerklärung passen.
+- [ ] Google verlangt für neue Entwicklerkonten einen Identitätsnachweis und bei Einzelpersonen einen Test mit mindestens zwölf Testern über zwei Wochen. Das ist ein eigener Vorgang nach dem App Store.

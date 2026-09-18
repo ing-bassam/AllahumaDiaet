@@ -95,14 +95,9 @@ export function useNutritionEditor({ initialPer100g, portionGrams, initialMode =
   };
 }
 
-type Props = {
-  editor: NutritionEditor;
-  autoFocus?: boolean;
-  /** Wird beim Fokussieren eines Feldes aufgerufen, z. B. um es ueber die Tastatur zu scrollen. */
-  onFieldFocus?: () => void;
-};
+type Props = { editor: NutritionEditor; autoFocus?: boolean };
 
-export function NutritionFields({ editor, autoFocus = false, onFieldFocus }: Props) {
+export function NutritionFields({ editor, autoFocus = false }: Props) {
   const { mode, setMode, draft, setField, portionGrams, portionLabel, validation, warning } = editor;
 
   return (
@@ -125,7 +120,6 @@ export function NutritionFields({ editor, autoFocus = false, onFieldFocus }: Pro
         onChangeText={(t) => setField('calories', t)}
         error={validation?.calories}
         autoFocus={autoFocus}
-        onFocus={onFieldFocus}
       />
       <View style={styles.macroRow}>
         <View style={styles.macro}>
@@ -135,7 +129,6 @@ export function NutritionFields({ editor, autoFocus = false, onFieldFocus }: Pro
             value={draft.protein}
             onChangeText={(t) => setField('protein', t)}
             error={validation?.protein}
-            onFocus={onFieldFocus}
           />
         </View>
         <View style={styles.macro}>
@@ -145,7 +138,6 @@ export function NutritionFields({ editor, autoFocus = false, onFieldFocus }: Pro
             value={draft.carbs}
             onChangeText={(t) => setField('carbs', t)}
             error={validation?.carbs}
-            onFocus={onFieldFocus}
           />
         </View>
         <View style={styles.macro}>
@@ -155,7 +147,6 @@ export function NutritionFields({ editor, autoFocus = false, onFieldFocus }: Pro
             value={draft.fat}
             onChangeText={(t) => setField('fat', t)}
             error={validation?.fat}
-            onFocus={onFieldFocus}
           />
         </View>
       </View>

@@ -4,6 +4,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { localDateKey, type MealType } from '../lib/format';
 import { rankFoods, toLikePattern } from '../lib/localSearch';
 import type { ActivityLevel, MacroSplit, Nutrients, Sex } from '../lib/nutrition';
+import { mayOverwriteWithRemote } from '../lib/foodSource';
 import type { ProductData } from '../lib/openFoodFacts';
 import { UPSERT_FOOD_ITEM_SQL } from './migrations';
 
@@ -206,6 +207,10 @@ export async function getFoodItem(db: SQLiteDatabase, key: string): Promise<Food
  * (Bedingung im SQL, siehe UPSERT_FOOD_ITEM_SQL).
  */
 export async function saveFoodItem(db: SQLiteDatabase, item: NewFoodItem): Promise<void> {
+  // Zweite Sicherung neben der Bedingung im SQL, damit die Regel auch im Code sichtbar ist.
+  const existing = await getFoodItem(db, item.barcode);
+  if (!mayOverwriteWithRemote(existing)) return;
+
   await db.runAsync(
     UPSERT_FOOD_ITEM_SQL,
     item.barcode,

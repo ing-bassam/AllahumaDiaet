@@ -32,7 +32,10 @@ export function NumericDoneBar() {
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'flex-end',
+    // Feste Hoehe: ohne sie kann die Leiste in manchen Kontexten auf 0 zusammenfallen.
+    minHeight: 44,
     backgroundColor: colors.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,

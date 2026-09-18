@@ -1,4 +1,4 @@
-# HALABI
+# Hachibu
 
 Kalorientracker-App für iPhone und Android nach dem Prinzip „Scan & Go“: öffnen, Barcode scannen, Menge eintippen, fertig.
 
@@ -23,6 +23,12 @@ Kalorientracker-App für iPhone und Android nach dem Prinzip „Scan & Go“: ö
 3. Den QR-Code im Terminal scannen – auf dem iPhone mit der Kamera-App, auf Android in Expo Go.
    Handy und PC müssen im selben WLAN sein. Klappt das nicht, `npx expo start --go --tunnel` verwenden.
 
+## Marke
+
+Die Vorlagen liegen in `assets/source/`: `icon.png` (Zeichen „H.“ auf Creme `#F7F6F3`) und `wordmark.png` (Schriftzug „Hachibu.“, transparent).
+`npm run icons` erzeugt daraus alle App-Icons und das Startbild und prüft Größe, Farbmodus, Alphakanal und die Android-Safe-Zone.
+Neue Vorlagen einfach dort ersetzen und das Skript erneut ausführen.
+
 ## Entwicklung
 
 ```bash
@@ -38,7 +44,7 @@ npm run typecheck # TypeScript
 | `src/components` | UI-Bausteine |
 | `src/legal` | Impressum, rechtliche Links, generierte Lizenzliste |
 | `tests` | Tests mit dem eingebauten Node-Testrunner |
-| `scripts` | `npm run icons` (Icons aus `assets/source/icon.svg`), `npm run licenses` (Lizenzliste) |
+| `scripts` | `npm run icons` (Icons und Startbild aus `assets/source/`), `npm run licenses` (Lizenzliste) |
 | `docs` | Datenschutz, Impressum, Support (GitHub Pages) und die App-Store-Connect-Checkliste |
 
 Nach dem Hinzufügen oder Aktualisieren von Paketen `npm run licenses` ausführen, damit die Liste unter *Info & Rechtliches* aktuell bleibt.

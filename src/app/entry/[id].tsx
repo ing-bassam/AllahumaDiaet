@@ -1,13 +1,24 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
 import { NumericDoneBar, numericAccessoryProps } from '../../components/NumericDoneBar';
-import { useKeyboardHeight } from '../../components/useKeyboardHeight';
 import { NutritionFields, useNutritionEditor } from '../../components/NutritionFields';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { deleteLogEntry, getLogEntry, updateFoodNutrients, updateLogEntry, type LogEntryDetail } from '../../db/repository';
@@ -16,7 +27,7 @@ import { nutrientsForPortion } from '../../lib/nutrition';
 import { portionPresets, validPortionGrams } from '../../lib/portions';
 import { colors, radius, spacing } from '../../theme';
 
-export default function EntrySheet() {
+export default function EntryScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -57,13 +68,6 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
   const [editingNutrients, setEditingNutrients] = useState(false);
   const [applyToFood, setApplyToFood] = useState(false);
   const [saving, setSaving] = useState(false);
-  // Hoehe der festen Buttonleiste und der Tastatur: Beides braucht unten Platz, sonst laesst sich
-  // der Inhalt bei offener Tastatur nicht bis zum Ende scrollen.
-  const [footerHeight, setFooterHeight] = useState(0);
-  const keyboardHeight = useKeyboardHeight();
-  const scrollRef = useRef<ScrollView>(null);
-  // Position des Naehrwert-Bereichs im Inhalt, um gezielt dorthin zu scrollen.
-  const panelY = useRef(0);
 
   const grams = parseDecimal(amount);
   const validGrams = validPortionGrams(grams);
@@ -95,12 +99,6 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
     }
   };
 
-  const scrollToNutrients = () => {
-    // Nicht ans Ende springen (sonst steht unten nur leerer Platz), sondern den Bereich
-    // knapp unter die Kopfzeile holen. Kurze Verzoegerung, bis Layout und Tastatur stehen.
-    setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(panelY.current - spacing.sm, 0), animated: true }), 150);
-  };
-
   const confirmDelete = () => {
     Alert.alert('Eintrag löschen?', `${entry.name} (${formatDecimal(entry.grams)} g)`, [
       { text: 'Abbrechen', style: 'cancel' },
@@ -120,8 +118,9 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
+    // Wie im Produkt-Screen: Die Tastatur verkleinert den Bereich, die Buttons bleiben erreichbar.
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <View style={styles.headerText}>
           <Text style={styles.name} numberOfLines={2}>
             {entry.name}
@@ -138,11 +137,11 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
       </View>
 
       <ScrollView
-        ref={scrollRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(footerHeight, keyboardHeight) + spacing.md }]}
+        contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        // Auf iOS folgt die Tastatur dem Finger; zusaetzlicher Weg, sie ohne „Fertig“ zu schliessen.
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       >
         <View style={styles.amountRow}>
           <TextInput
@@ -187,21 +186,13 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
           icon="pencil"
           trailingIcon={editingNutrients ? 'chevronUp' : 'chevronDown'}
           expanded={editingNutrients}
-          onPress={() => {
-            setEditingNutrients((open) => !open);
-            if (!editingNutrients) scrollToNutrients();
-          }}
+          onPress={() => setEditingNutrients((open) => !open)}
         />
 
         {editingNutrients && (
-          <View
-            style={[styles.panel, styles.panelSpacing]}
-            onLayout={(event) => {
-              panelY.current = event.nativeEvent.layout.y;
-            }}
-          >
+          <View style={[styles.panel, styles.panelSpacing]}>
             <Text style={styles.sectionLabel}>Nährwerte dieses Eintrags</Text>
-            <NutritionFields editor={editor} onFieldFocus={scrollToNutrients} />
+            <NutritionFields editor={editor} />
             <View style={styles.switchRow}>
               <Text style={styles.switchLabel}>Auch für künftige Einträge dieses Lebensmittels übernehmen</Text>
               <Switch
@@ -220,16 +211,13 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
         )}
       </ScrollView>
 
-      <View
-        style={[styles.footer, { paddingBottom: insets.bottom + spacing.sm }]}
-        onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
-      >
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.sm }]}>
         <PrimaryButton label="Speichern" onPress={save} disabled={!canSave} loading={saving} />
         <PrimaryButton label="Eintrag löschen" variant="danger" onPress={confirmDelete} style={{ marginTop: spacing.sm }} />
       </View>
 
       <NumericDoneBar />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -248,7 +236,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
     gap: spacing.sm,
     backgroundColor: colors.background,
@@ -259,7 +246,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: '700', color: colors.text, lineHeight: 26 },
   muted: { fontSize: 14, color: colors.textMuted },
   closeButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: spacing.md, paddingBottom: spacing.lg },
+  content: { padding: spacing.md, paddingBottom: spacing.xl },
   // Feste Zeilenhöhe und Höhe: Ohne sie ragen die großen Ziffern auf iOS aus dem Feld heraus
   // und überlagern die Kopfzeile darüber.
   amountRow: {

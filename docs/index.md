@@ -1,8 +1,8 @@
 ---
-title: HALABI
+title: Hachibu
 ---
 
-# HALABI
+# Hachibu
 
 Kalorien und Makronährstoffe erfassen: Barcode scannen, Menge eintippen, fertig. Ohne Konto, ohne Werbung – alle Daten bleiben auf deinem Gerät.
 
