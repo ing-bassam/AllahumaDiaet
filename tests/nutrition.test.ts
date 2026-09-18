@@ -49,6 +49,12 @@ describe('calculateCalorieGoal', () => {
     assert.equal(calculateCalorieGoal({ ...base, goalWeightKg: 79.5 }).adjustment, 0);
   });
 
+  it('wertet genau 1 kg Unterschied trotz Gleitkomma-Rest als Abnehmen bzw. Zunehmen', () => {
+    // 63.1 - 64.1 ergibt -0.9999999999999929 und verfehlte die Schwelle.
+    assert.equal(calculateCalorieGoal({ ...base, weightKg: 64.1, goalWeightKg: 63.1 }).adjustment, -500);
+    assert.equal(calculateCalorieGoal({ ...base, weightKg: 63.1, goalWeightKg: 64.1 }).adjustment, 300);
+  });
+
   it('geht nie unter den Grundumsatz', () => {
     const goal = calculateCalorieGoal({
       age: 70,

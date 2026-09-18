@@ -69,7 +69,8 @@ export function palFor(level: ActivityLevel): number {
 export function calculateCalorieGoal(input: GoalInput): CalorieGoal {
   const bmr = bmrMifflinStJeor(input);
   const tdee = bmr * palFor(input.activityLevel);
-  const weightDiff = input.goalWeightKg - input.weightKg;
+  // Auf 0,01 kg runden: 63.1 - 64.1 ergibt sonst -0.9999999999999929 und verfehlt die 1-kg-Schwelle.
+  const weightDiff = roundTo(input.goalWeightKg - input.weightKg, 0.01);
 
   let adjustment = 0;
   if (weightDiff <= -1) adjustment = LOSE_WEIGHT_ADJUSTMENT;
