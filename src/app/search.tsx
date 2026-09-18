@@ -78,6 +78,8 @@ export default function SearchScreen() {
   const trimmed = query.trim();
   const queryRef = useRef(trimmed);
   queryRef.current = trimmed;
+  const onlineHitsRef = useRef(online.hits);
+  onlineHitsRef.current = online.hits;
 
   // Vorschläge ohne Eingabe – bei jedem Fokus neu, damit gerade eingetragene Lebensmittel oben stehen.
   useFocusEffect(
@@ -86,23 +88,37 @@ export default function SearchScreen() {
         setRecent(r);
         setFrequent(f);
       });
+      // Nach der Rückkehr vom Produkt-Screen: dort korrigierte oder gespeicherte Online-Treffer mit
+      // ihren lokalen Werten zeigen.
+      const q = queryRef.current;
+      const keys = onlineHitsRef.current.map(hitKey);
+      if (keys.length > 0) {
+        getFoodItemsByKeys(db, keys).then((locals) => {
+          if (queryRef.current !== q) return;
+          setOnlineLocal((prev) => ({ ...prev, ...Object.fromEntries(locals.map((food) => [food.barcode, food])) }));
+        });
+      }
     }, [db]),
   );
 
-  // Lokale Treffer sofort beim Tippen, ab 2 Zeichen.
-  useEffect(() => {
-    if (trimmed.length < MIN_LOCAL_QUERY_LENGTH) {
-      setLocalResults([]);
-      return;
-    }
-    let cancelled = false;
-    searchLocalFoods(db, trimmed, LOCAL_LIMIT).then((items) => {
-      if (!cancelled) setLocalResults(items);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [db, trimmed]);
+  // Lokale Treffer sofort beim Tippen (ab 2 Zeichen) und bei jedem Fokus neu: Der Produkt-Screen kann
+  // food_item geändert haben, ohne dass sich der Suchbegriff ändert. useFocusEffect läuft auch dann
+  // erneut, wenn sich bei fokussiertem Screen der Callback ändert, also bei jedem neuen Suchbegriff.
+  useFocusEffect(
+    useCallback(() => {
+      if (trimmed.length < MIN_LOCAL_QUERY_LENGTH) {
+        setLocalResults([]);
+        return;
+      }
+      let cancelled = false;
+      searchLocalFoods(db, trimmed, LOCAL_LIMIT).then((items) => {
+        if (!cancelled) setLocalResults(items);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [db, trimmed]),
+  );
 
   // Online-Ergebnisse gehören zu genau einem Suchbegriff.
   useEffect(() => {
