@@ -35,6 +35,22 @@ export function parseDraft(draft: NutrientDraft): Nutrients | null {
   return { calories, protein, carbs, fat };
 }
 
+/**
+ * Übernimmt nur die vom Nutzer bearbeiteten Felder aus den Feldwerten; alle übrigen behalten ihren
+ * gespeicherten Wert. Die Felder zeigen gerundete Zahlen – pro Portion etwa „0,1“ für 0,06 g –, und
+ * zurückgerechnet würden sie Werte verfälschen, die der Nutzer nie angefasst hat.
+ */
+export function mergeEditedFields(
+  base: Nutrients | null,
+  parsed: Nutrients,
+  edited: ReadonlySet<keyof NutrientDraft>,
+): Nutrients {
+  if (!base) return parsed;
+  const merged = { ...base };
+  for (const field of edited) merged[field] = parsed[field];
+  return merged;
+}
+
 /** Rechnet die Feldwerte auf 100 g um; `null` bei unvollständigen Feldern oder fehlender Portionsgröße. */
 export function draftToPer100g(draft: NutrientDraft, mode: NutritionMode, grams: number | null): Nutrients | null {
   const values = parseDraft(draft);

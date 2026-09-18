@@ -8,6 +8,7 @@ import {
   draftToPer100g,
   EMPTY_DRAFT,
   isUsablePortion,
+  mergeEditedFields,
   type NutrientDraft,
   type NutritionMode,
 } from '../lib/nutritionDraft';
@@ -51,18 +52,31 @@ export function useNutritionEditor({ initialPer100g, portionGrams, initialMode =
   // damit gerundete Anzeigewerte die gespeicherten Werte nicht verfälschen.
   const [per100g, setPer100g] = useState<Nutrients | null>(initialPer100g);
   const [touched, setTouched] = useState(false);
+  // Stand, aus dem die Felder zuletzt gefüllt wurden, und die seitdem bearbeiteten Felder. Nur sie
+  // werden aus dem Text gelesen; alle übrigen zeigen bloß gerundete Werte.
+  const base = useRef<Nutrients | null>(initialPer100g);
+  const edited = useRef(new Set<keyof NutrientDraft>());
 
   const setField = (field: keyof NutrientDraft, text: string) => {
     const next = { ...draft, [field]: text };
     setDraft(next);
     setTouched(true);
-    setPer100g(draftToPer100g(next, mode, portionGrams));
+    edited.current.add(field);
+    const parsed = draftToPer100g(next, mode, portionGrams);
+    setPer100g(parsed && mergeEditedFields(base.current, parsed, edited.current));
+  };
+
+  /** Füllt die Felder neu aus den Werten pro 100 g. Danach stimmen Text und Wert wieder überein. */
+  const showValues = (values: Nutrients, nextMode: NutritionMode, grams: number | null) => {
+    base.current = values;
+    edited.current.clear();
+    setDraft(draftFromPer100g(values, nextMode, grams));
   };
 
   const setMode = (nextMode: NutritionMode) => {
     if (nextMode === mode || (nextMode === 'portion' && !isUsablePortion(portionGrams))) return;
     setModeState(nextMode);
-    if (per100g) setDraft(draftFromPer100g(per100g, nextMode, portionGrams));
+    if (per100g) showValues(per100g, nextMode, portionGrams);
   };
 
   // Ändert sich die Menge, rechnen die Portionsfelder proportional über die Werte pro 100 g mit.
@@ -73,10 +87,10 @@ export function useNutritionEditor({ initialPer100g, portionGrams, initialMode =
     if (mode !== 'portion') return;
     if (!isUsablePortion(portionGrams)) {
       setModeState('per100g');
-      if (per100g) setDraft(draftFromPer100g(per100g, 'per100g', null));
+      if (per100g) showValues(per100g, 'per100g', null);
       return;
     }
-    if (per100g) setDraft(draftFromPer100g(per100g, 'portion', portionGrams));
+    if (per100g) showValues(per100g, 'portion', portionGrams);
   }, [portionGrams, mode, per100g]);
 
   const validation = per100g ? validateNutrients(per100g) : null;
