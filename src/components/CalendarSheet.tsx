@@ -29,7 +29,13 @@ export function CalendarSheet({ visible, selectedDate, today, markedDates, onMon
 
   // Beim Öffnen immer den Monat des ausgewählten Tages zeigen.
   useEffect(() => {
-    if (visible) setMonth(startOfMonth(selectedDate));
+    if (!visible) return;
+    // Dasselbe Objekt behalten, wenn der Monat schon stimmt: Ein neues Date-Objekt gälte als Änderung
+    // und löste die Monatsabfrage unten bei jedem Öffnen ein zweites Mal aus.
+    setMonth((current) => {
+      const next = startOfMonth(selectedDate);
+      return current.getTime() === next.getTime() ? current : next;
+    });
   }, [visible, selectedDate]);
 
   useEffect(() => {
