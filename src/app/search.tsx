@@ -126,6 +126,9 @@ export default function SearchScreen() {
   // Online-Ergebnisse gehören zu genau einem Suchbegriff.
   useEffect(() => {
     if (online.status !== 'idle' && online.query !== trimmed) {
+      // Auch laufende Anfragen verwerfen: Sonst träfe etwa ein verspätetes „Mehr laden“ auf die geleerte
+      // Liste, sobald der Begriff wieder derselbe ist, und zeigte Seite 2 ohne Seite 1.
+      searchRun.current += 1;
       setOnline(IDLE);
       setOnlineLocal({});
     }
