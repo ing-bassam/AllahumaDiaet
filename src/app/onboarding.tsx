@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '../components/Chip';
@@ -115,6 +115,9 @@ export default function Onboarding() {
       });
       if (router.canGoBack()) router.back();
       else router.replace('/');
+    } catch {
+      // Sonst bliebe ein Fehler (z. B. voller Speicher) unsichtbar: Der Knopf springt nur zurück.
+      Alert.alert('Speichern fehlgeschlagen', 'Bitte versuche es erneut.');
     } finally {
       setSaving(false);
     }
