@@ -152,8 +152,10 @@ export function validateNutrients(per100g: Nutrients): NutrientValidation {
   const fat = negative(per100g.fat);
 
   const macroSum = per100g.protein + per100g.carbs + per100g.fat;
+  // Toleranz für Gleitkomma-Reste (85.2 + 7.4 + 7.4 = 100.00000000000001) und für die auf vier
+  // Stellen gerundeten Werte aus portionToPer100g; echte Überschreitungen sind deutlich größer.
   const macroTotal =
-    !protein && !carbs && !fat && macroSum > MAX_MACROS_PER_100G
+    !protein && !carbs && !fat && macroSum > MAX_MACROS_PER_100G + 0.001
       ? `Protein, Kohlenhydrate und Fett zusammen können nicht über ${MAX_MACROS_PER_100G} g pro 100 g liegen.`
       : null;
 

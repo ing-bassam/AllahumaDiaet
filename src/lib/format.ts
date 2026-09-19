@@ -39,7 +39,10 @@ export function formatInt(value: number): string {
 /** Höchstens eine Nachkommastelle mit Komma, z. B. 12,5 oder 12 */
 export function formatDecimal(value: number): string {
   const rounded = Math.round(value * 10) / 10;
-  return Number.isInteger(rounded) ? formatInt(rounded) : rounded.toFixed(1).replace('.', ',');
+  if (Number.isInteger(rounded)) return formatInt(rounded);
+  // Tausenderpunkt wie bei formatInt, sonst stünde 1.250 g neben 1250,5 g.
+  const [whole, fraction] = rounded.toFixed(1).split('.');
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${fraction}`;
 }
 
 /** Zahl als Text für ein Eingabefeld: Komma statt Punkt, ohne Tausenderpunkt (sonst liest `parseDecimal` 1.000 als 1). */
