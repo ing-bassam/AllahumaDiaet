@@ -80,6 +80,9 @@ export default function SearchScreen() {
   queryRef.current = trimmed;
   const onlineHitsRef = useRef(online.hits);
   onlineHitsRef.current = online.hits;
+  // Zählt die Online-Suchen. Der Suchbegriff allein reicht nicht: Wer ihn ändert, zurückändert und
+  // erneut sucht, hat zwei laufende Anfragen zum selben Begriff, und die ältere darf nicht gewinnen.
+  const searchRun = useRef(0);
 
   // Vorschläge ohne Eingabe – bei jedem Fokus neu, damit gerade eingetragene Lebensmittel oben stehen.
   useFocusEffect(
@@ -133,11 +136,13 @@ export default function SearchScreen() {
     if (q.length < MIN_LOCAL_QUERY_LENGTH) return;
     if (page === 1) Keyboard.dismiss();
 
+    const run = ++searchRun.current;
+    const isStale = () => searchRun.current !== run || queryRef.current !== q;
     const scope = page === 1 ? 'germany' : online.scope;
     setOnline((prev) => (page === 1 ? { ...IDLE, query: q, status: 'loading' } : { ...prev, status: 'loadingMore', error: null }));
 
     const { result, scope: usedScope } = await searchProducts({ query: q, page, scope }, USER_AGENT, () => searchLimiter.tryAcquire());
-    if (queryRef.current !== q) return;
+    if (isStale()) return;
 
     if (result.status !== 'ok') {
       const error = messageFor(result);
@@ -147,7 +152,7 @@ export default function SearchScreen() {
 
     // Lokal vorhandene Produkte gewinnen: Ihre gespeicherten (ggf. korrigierten) Werte werden angezeigt.
     const locals = await getFoodItemsByKeys(db, result.page.hits.map(hitKey));
-    if (queryRef.current !== q) return;
+    if (isStale()) return;
     const localMap = Object.fromEntries(locals.map((food) => [food.barcode, food]));
 
     setOnlineLocal((prev) => (page === 1 ? localMap : { ...prev, ...localMap }));
