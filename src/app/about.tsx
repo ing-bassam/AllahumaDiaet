@@ -56,6 +56,9 @@ export default function About() {
           setDeleting(true);
           try {
             await deleteAllData(db);
+            // Erst den Stapel leeren: Darunter liegt meist noch das Profilformular mit den gerade
+            // gelöschten Werten, und nach dem Speichern führte router.back() genau dorthin zurück.
+            if (router.canDismiss()) router.dismissAll();
             router.replace('/onboarding');
           } catch {
             setDeleting(false);

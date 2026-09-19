@@ -6,7 +6,7 @@ import { rankFoods, toLikePattern } from '../lib/localSearch';
 import type { ActivityLevel, MacroSplit, Nutrients, Sex } from '../lib/nutrition';
 import { mayOverwriteWithRemote } from '../lib/foodSource';
 import type { ProductData } from '../lib/openFoodFacts';
-import { UPSERT_FOOD_ITEM_SQL } from './migrations';
+import { SCRUB_DELETED_DATA_SQL, UPSERT_FOOD_ITEM_SQL } from './migrations';
 
 export type Profile = {
   id: string;
@@ -410,5 +410,5 @@ export async function deleteAllData(db: SQLiteDatabase): Promise<void> {
     await txn.runAsync('DELETE FROM user_profile');
   });
   // Gelöschte Zeilen bleiben sonst in freien Seiten und im WAL lesbar, bis sie überschrieben werden.
-  await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE); VACUUM;');
+  await db.execAsync(SCRUB_DELETED_DATA_SQL);
 }

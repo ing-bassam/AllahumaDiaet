@@ -49,6 +49,13 @@ describe('validateNutrients', () => {
     assert.ok(result.macroTotal);
   });
 
+  it('akzeptiert Makros, die zusammen genau 100 g ergeben', () => {
+    // 85.2 + 7.4 + 7.4 ergibt in Gleitkomma 100.00000000000001.
+    assert.equal(validateNutrients({ calories: 420, protein: 85.2, carbs: 7.4, fat: 7.4 }).valid, true);
+    // 20/5/5 g in einer 30-g-Portion: auf 100 g umgerechnet 66.6667 + 16.6667 + 16.6667 = 100.0001.
+    assert.equal(validateNutrients(portionToPer100g({ calories: 120, protein: 20, carbs: 5, fat: 5 }, 30)).valid, true);
+  });
+
   it('meldet negative Werte am jeweiligen Feld', () => {
     const result = validateNutrients({ calories: 100, protein: -1, carbs: 10, fat: 1 });
     assert.equal(result.valid, false);

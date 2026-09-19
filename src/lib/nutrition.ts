@@ -69,15 +69,20 @@ export function palFor(level: ActivityLevel): number {
 export function calculateCalorieGoal(input: GoalInput): CalorieGoal {
   const bmr = bmrMifflinStJeor(input);
   const tdee = bmr * palFor(input.activityLevel);
-  const weightDiff = input.goalWeightKg - input.weightKg;
+  // Auf 0,01 kg runden: 63.1 - 64.1 ergibt sonst -0.9999999999999929 und verfehlt die 1-kg-Schwelle.
+  const weightDiff = roundTo(input.goalWeightKg - input.weightKg, 0.01);
 
   let adjustment = 0;
   if (weightDiff <= -1) adjustment = LOSE_WEIGHT_ADJUSTMENT;
   else if (weightDiff >= 1) adjustment = GAIN_WEIGHT_ADJUSTMENT;
 
-  // Nie unter den Grundumsatz gehen.
-  const dailyGoal = roundTo(Math.max(tdee + adjustment, bmr), 10);
-  return { bmr: Math.round(bmr), tdee: Math.round(tdee), adjustment, dailyGoal };
+  const target = tdee + adjustment;
+  // Nie unter den Grundumsatz gehen – auch nicht durch das Runden auf 10 kcal. Die Untergrenze ist
+  // deshalb der auf 10 kcal aufgerundete angezeigte Grundumsatz.
+  const dailyGoal = Math.max(roundTo(target, 10), Math.ceil(Math.round(bmr) / 10) * 10);
+  // Greift die Untergrenze, das tatsächliche Defizit ausweisen statt der nominellen 500 kcal.
+  const effectiveAdjustment = target < bmr ? Math.round(bmr - tdee) : adjustment;
+  return { bmr: Math.round(bmr), tdee: Math.round(tdee), adjustment: effectiveAdjustment, dailyGoal };
 }
 
 export function macroGoalsInGrams(dailyCalories: number, split: MacroSplit): MacroSplit {
@@ -147,8 +152,10 @@ export function validateNutrients(per100g: Nutrients): NutrientValidation {
   const fat = negative(per100g.fat);
 
   const macroSum = per100g.protein + per100g.carbs + per100g.fat;
+  // Toleranz für Gleitkomma-Reste (85.2 + 7.4 + 7.4 = 100.00000000000001) und für die auf vier
+  // Stellen gerundeten Werte aus portionToPer100g; echte Überschreitungen sind deutlich größer.
   const macroTotal =
-    !protein && !carbs && !fat && macroSum > MAX_MACROS_PER_100G
+    !protein && !carbs && !fat && macroSum > MAX_MACROS_PER_100G + 0.001
       ? `Protein, Kohlenhydrate und Fett zusammen können nicht über ${MAX_MACROS_PER_100G} g pro 100 g liegen.`
       : null;
 

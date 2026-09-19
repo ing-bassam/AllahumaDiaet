@@ -111,10 +111,14 @@ export default function Dashboard() {
     loadEntries(selectedKey);
   }, [selectedKey, loadEntries]);
 
+  // Nur die jüngste Monatsabfrage zählt: Öffnet der Kalender auf einem anderen Monat als zuletzt,
+  // laufen kurz zwei Abfragen, und die ältere darf die Punkte nicht überschreiben.
+  const monthRequest = useRef(0);
   const loadMonth = useCallback(
     async (month: Date) => {
+      const request = ++monthRequest.current;
       const dates = await getDatesWithEntries(db, dateKey(startOfMonth(month)), dateKey(endOfMonth(month)));
-      setMarkedDates(dates);
+      if (monthRequest.current === request) setMarkedDates(dates);
     },
     [db],
   );

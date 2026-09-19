@@ -20,12 +20,35 @@ function canonicalGtin(code: string): string {
 }
 
 /**
+ * Schreibt einen achtstelligen UPC-E (Zahlensystem, sechs Ziffern, Prüfziffer) zur zwölfstelligen
+ * UPC-A aus. Die Prüfziffer gilt für die ausgeschriebene Form, nicht für die acht Ziffern.
+ */
+export function expandUpcE(code: string): string | null {
+  if (!/^[01]\d{7}$/.test(code)) return null;
+  const [system, d1, d2, d3, d4, d5, d6, check] = code;
+  let body: string;
+  if (d6 <= '2') body = `${d1}${d2}${d6}0000${d3}${d4}${d5}`;
+  else if (d6 === '3') body = `${d1}${d2}${d3}00000${d4}${d5}`;
+  else if (d6 === '4') body = `${d1}${d2}${d3}${d4}00000${d5}`;
+  else body = `${d1}${d2}${d3}${d4}${d5}0000${d6}`;
+  return `${system}${body}${check}`;
+}
+
+/**
  * Liefert die normalisierte GTIN oder `null`, wenn der Inhalt kein Produktcode ist.
  * Unterstützt reine Ziffern-Codes und QR-Codes im GS1-Digital-Link-Format
  * (z. B. https://id.gs1.org/01/04012345678901).
+ *
+ * `type` ist der vom Scanner gemeldete Barcode-Typ. Er ist nötig, weil ein UPC-E genauso acht
+ * Ziffern hat wie eine EAN-8, aber anders geprüft wird.
  */
-export function normalizeBarcode(raw: string): string | null {
+export function normalizeBarcode(raw: string, type?: string): string | null {
   const value = raw.trim();
+
+  if (type === 'upc_e') {
+    const upcA = expandUpcE(value);
+    return upcA && hasValidCheckDigit(upcA) ? canonicalGtin(upcA) : null;
+  }
 
   if (/^\d+$/.test(value)) {
     return hasValidCheckDigit(value) ? canonicalGtin(value) : null;

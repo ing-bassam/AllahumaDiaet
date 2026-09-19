@@ -9,6 +9,10 @@ describe('format', () => {
     assert.equal(formatInt(980), '980');
     assert.equal(formatDecimal(12.54), '12,5');
     assert.equal(formatDecimal(12), '12');
+    // Tausenderpunkt auch mit Nachkommastelle, wie bei ganzen Zahlen.
+    assert.equal(formatDecimal(1234.5), '1.234,5');
+    assert.equal(formatDecimal(-1234.5), '-1.234,5');
+    assert.equal(formatDecimal(999.96), '1.000');
   });
 
   it('liest Eingaben mit Komma und Punkt', () => {

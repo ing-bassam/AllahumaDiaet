@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -181,8 +181,12 @@ function PortionForm({ food, persisted, day, onFoodChange, onSaved }: PortionFor
   const canRestore = food.userEdited && !isCustomFoodKey(food.barcode);
   const presets = portionPresets(food.servingSizeG);
 
+  // Sperrt sofort und nicht erst mit dem nächsten Rendern: Die Fertig-Taste der Tastatur ruft save
+  // direkt auf, und ein doppeltes Antippen schriebe denselben Eintrag sonst zweimal ins Tagebuch.
+  const saveInFlight = useRef(false);
   const save = async () => {
-    if (validGrams === null) return;
+    if (validGrams === null || saveInFlight.current) return;
+    saveInFlight.current = true;
     setSaving(true);
     try {
       // Erst das Produkt, dann der Eintrag: log_entry verweist per Fremdschlüssel darauf.
@@ -194,6 +198,7 @@ function PortionForm({ food, persisted, day, onFoodChange, onSaved }: PortionFor
     } catch {
       Alert.alert('Speichern fehlgeschlagen', 'Der Eintrag konnte nicht gespeichert werden. Bitte versuche es erneut.');
     } finally {
+      saveInFlight.current = false;
       setSaving(false);
     }
   };
@@ -416,6 +421,7 @@ function ManualEntryForm({ barcode, reason, prefill, onRetry, onSaved }: ManualP
     initialPer100g: null,
     portionGrams: packageValue !== null && packageValue > 0 ? packageValue : null,
     portionLabel: 'pro Packung',
+    portionIsBasis: true,
   });
 
   const canSave = name.trim() !== '' && editor.isValid && !packageError && !saving;

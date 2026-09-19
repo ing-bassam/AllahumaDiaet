@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 
-import { MIGRATION_V2_SQL, SCHEMA_V1_SQL, UPSERT_FOOD_ITEM_SQL } from '../src/db/migrations.ts';
+import { MIGRATION_V2_SQL, SCHEMA_V1_SQL, SCRUB_DELETED_DATA_SQL, UPSERT_FOOD_ITEM_SQL } from '../src/db/migrations.ts';
 
 /** Datenbank im Zustand einer Version-1-Installation mit echten Einträgen. */
 function createV1Database() {
@@ -25,6 +28,22 @@ const migrate = (db: DatabaseSync) => {
   db.exec(MIGRATION_V2_SQL);
   db.exec('COMMIT;');
 };
+
+describe('Schema v1', () => {
+  it('rollt bei einem Fehler vollständig zurück, auch user_version', () => {
+    const db = new DatabaseSync(':memory:');
+    // Erzwingt einen Fehler beim dritten CREATE TABLE, nachdem zwei Tabellen schon angelegt sind.
+    db.exec('CREATE TABLE log_entry (x);');
+
+    db.exec('BEGIN EXCLUSIVE;');
+    assert.throws(() => db.exec(SCHEMA_V1_SQL));
+    db.exec('ROLLBACK;');
+
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name);
+    assert.deepEqual(tables, ['log_entry']);
+    assert.equal((db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version, 0);
+  });
+});
 
 describe('Migration v1 → v2', () => {
   it('behält alle Daten und füllt die Schnappschüsse aus food_item', () => {
@@ -98,5 +117,37 @@ describe('UPSERT_FOOD_ITEM_SQL', () => {
 
     assert.equal((db.prepare("SELECT name FROM food_item WHERE barcode = '4006381333931'").get() as { name: string }).name, 'Skyr neu');
     assert.equal((db.prepare('SELECT COUNT(*) AS n FROM food_item').get() as { n: number }).n, 3);
+  });
+});
+
+describe('SCRUB_DELETED_DATA_SQL', () => {
+  it('entfernt gelöschte Inhalte aus Datenbankdatei und WAL', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hachibu-scrub-'));
+    const file = join(dir, 'test.db');
+    const marker = 'GEHEIMMARKER-7f3a9c';
+    // Wie in der App: eine dauerhaft offene Verbindung im WAL-Modus …
+    const main = new DatabaseSync(file);
+    try {
+      main.exec('PRAGMA journal_mode = WAL;');
+      main.exec(SCHEMA_V1_SQL);
+      migrate(main);
+      main.prepare(UPSERT_FOOD_ITEM_SQL).run('4006381333931', marker, marker, 63, 11, 4, 0.2, 500, null, 'openfoodfacts');
+      // Die Daten liegen schon länger in der Hauptdatei, nicht nur im WAL.
+      main.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+      assert.ok(readFileSync(file).includes(marker));
+
+      // … und eine zweite, kurzlebige für die Lösch-Transaktion (withExclusiveTransactionAsync).
+      const txn = new DatabaseSync(file);
+      txn.exec('BEGIN EXCLUSIVE; DELETE FROM log_entry; DELETE FROM food_item; DELETE FROM user_profile; COMMIT;');
+      txn.close();
+
+      main.exec(SCRUB_DELETED_DATA_SQL);
+
+      assert.ok(!readFileSync(file).includes(marker), 'Hauptdatei enthält noch gelöschte Inhalte');
+      assert.ok(!readFileSync(`${file}-wal`).includes(marker), 'WAL enthält noch gelöschte Inhalte');
+    } finally {
+      main.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

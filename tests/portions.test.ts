@@ -16,6 +16,13 @@ describe('portionPresets', () => {
     assert.equal(portionPresets(null).length, 3);
     assert.equal(portionPresets(0).length, 3);
   });
+
+  it('lässt eine Packung weg, die sich gar nicht speichern ließe', () => {
+    // z. B. ein 6 × 1,5-l-Gebinde: Die Menge läge über der Obergrenze und „Speichern“ bliebe gesperrt.
+    assert.equal(portionPresets(MAX_PORTION_G)[0].grams, MAX_PORTION_G);
+    assert.equal(portionPresets(MAX_PORTION_G + 1).length, 3);
+    assert.equal(portionPresets(Number.POSITIVE_INFINITY).length, 3);
+  });
 });
 
 describe('validPortionGrams', () => {
