@@ -41,6 +41,13 @@ describe('nutritionDraft', () => {
     assert.equal(draftToPer100g({ calories: '50', protein: '5', carbs: '2,5', fat: '1' }, 'portion', 0), null);
   });
 
+  it('rechnet dieselben Etikettwerte mit korrigierter Packungsgröße neu um', () => {
+    // Erst 500 g getippt, dann auf 400 g korrigiert: Die Etikettwerte bleiben, die Basis ändert sich.
+    const label = { calories: '1200', protein: '40', carbs: '100', fat: '60' };
+    assert.deepEqual(draftToPer100g(label, 'portion', 500), { calories: 240, protein: 8, carbs: 20, fat: 12 });
+    assert.deepEqual(draftToPer100g(label, 'portion', 400), { calories: 300, protein: 10, carbs: 25, fat: 15 });
+  });
+
   it('prüft Portionsgrößen', () => {
     assert.equal(isUsablePortion(30), true);
     assert.equal(isUsablePortion(0), false);

@@ -416,6 +416,7 @@ function ManualEntryForm({ barcode, reason, prefill, onRetry, onSaved }: ManualP
     initialPer100g: null,
     portionGrams: packageValue !== null && packageValue > 0 ? packageValue : null,
     portionLabel: 'pro Packung',
+    portionIsBasis: true,
   });
 
   const canSave = name.trim() !== '' && editor.isValid && !packageError && !saving;

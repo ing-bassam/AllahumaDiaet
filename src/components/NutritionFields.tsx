@@ -40,9 +40,21 @@ type Options = {
   initialMode?: NutritionMode;
   /** Beschriftung des Portionsmodus, z. B. „pro Portion“ oder „pro Packung“. */
   portionLabel?: string;
+  /**
+   * Die Menge ist die Bezugsgröße der eingetippten Werte (Etikett „pro Packung“), nicht die gegessene
+   * Menge. Ändert sie sich, bleiben die Felder stehen und die Werte pro 100 g werden neu berechnet –
+   * statt umgekehrt.
+   */
+  portionIsBasis?: boolean;
 };
 
-export function useNutritionEditor({ initialPer100g, portionGrams, initialMode = 'per100g', portionLabel = 'pro Portion' }: Options): NutritionEditor {
+export function useNutritionEditor({
+  initialPer100g,
+  portionGrams,
+  initialMode = 'per100g',
+  portionLabel = 'pro Portion',
+  portionIsBasis = false,
+}: Options): NutritionEditor {
   const startMode = initialMode === 'portion' && isUsablePortion(portionGrams) ? 'portion' : 'per100g';
   const [mode, setModeState] = useState<NutritionMode>(startMode);
   const [draft, setDraft] = useState<NutrientDraft>(() =>
@@ -85,13 +97,21 @@ export function useNutritionEditor({ initialPer100g, portionGrams, initialMode =
     if (lastGrams.current === portionGrams) return;
     lastGrams.current = portionGrams;
     if (mode !== 'portion') return;
+    if (portionIsBasis) {
+      // Die Felder enthalten die vom Etikett abgetippten Werte. Ohne gültige Größe gibt es vorerst
+      // keine Werte pro 100 g, und Speichern bleibt gesperrt.
+      base.current = null;
+      edited.current.clear();
+      setPer100g(draftToPer100g(draft, 'portion', portionGrams));
+      return;
+    }
     if (!isUsablePortion(portionGrams)) {
       setModeState('per100g');
       if (per100g) showValues(per100g, 'per100g', null);
       return;
     }
     if (per100g) showValues(per100g, 'portion', portionGrams);
-  }, [portionGrams, mode, per100g]);
+  }, [portionGrams, mode, per100g, portionIsBasis, draft]);
 
   const validation = per100g ? validateNutrients(per100g) : null;
   return {
