@@ -1,8 +1,8 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
@@ -19,7 +19,7 @@ export default function Scanner() {
   // Tag, auf den der Eintrag gehört (aus der Startseite); fehlt er, gilt heute.
   const { date } = useLocalSearchParams<{ date?: string }>();
   const insets = useSafeAreaInsets();
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualCode, setManualCode] = useState('');
@@ -28,15 +28,26 @@ export default function Scanner() {
   // Die Kamera meldet denselben Code mehrmals pro Sekunde; nur den ersten verarbeiten.
   const handled = useRef(false);
 
+  // Die Berechtigung wird nur beim Öffnen gelesen. Wer sie in den Systemeinstellungen erteilt und
+  // zurückkommt, sähe sonst weiter den Hinweis – unter Android ohne erneute Abfrage eine Sackgasse.
+  const granted = permission?.granted ?? false;
+  useEffect(() => {
+    if (granted) return;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') getPermission();
+    });
+    return () => subscription.remove();
+  }, [granted, getPermission]);
+
   const openProduct = (barcode: string) => {
     handled.current = true;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace({ pathname: '/product/[barcode]', params: { barcode, ...(date ? { date } : null) } });
   };
 
-  const handleScan = ({ data }: BarcodeScanningResult) => {
+  const handleScan = ({ data, type }: BarcodeScanningResult) => {
     if (handled.current) return;
-    const barcode = normalizeBarcode(data);
+    const barcode = normalizeBarcode(data, type);
     if (barcode) {
       openProduct(barcode);
       return;
