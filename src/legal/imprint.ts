@@ -11,7 +11,7 @@ export const IMPRINT = {
   phone: null as string | null,
 } as const;
 
-const PAGES_BASE_URL = 'https://abdelabu99-ai.github.io/AllahumaDiaet';
+const PAGES_BASE_URL = 'https://ing-bassam.github.io/AllahumaDiaet';
 
 export const LEGAL_URLS = {
   // Werden über GitHub Pages aus dem Ordner docs/ veröffentlicht.
