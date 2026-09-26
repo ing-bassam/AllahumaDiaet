@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CalendarSheet } from '../components/CalendarSheet';
 import { CalorieRing } from '../components/CalorieRing';
 import { Icon } from '../components/Icon';
+import { LoadError } from '../components/LoadError';
 import { MacroBar } from '../components/MacroBar';
 import {
   deleteLogEntry,
@@ -56,6 +57,8 @@ export default function Dashboard() {
   const [collapsed, setCollapsed] = useState<Partial<Record<MealType, boolean>>>({});
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [markedDates, setMarkedDates] = useState<string[]>([]);
+  // Scheitert das Laden von Profil oder Tag, stünde sonst dauerhaft ein leerer Bildschirm da.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const todayRef = useRef(today);
   const selectedRef = useRef(selectedDate);
@@ -70,7 +73,13 @@ export default function Dashboard() {
 
   const loadEntries = useCallback(
     async (key: string) => {
-      const rows = await getEntriesForDate(db, key);
+      let rows;
+      try {
+        rows = await getEntriesForDate(db, key);
+      } catch {
+        setLoadFailed(true);
+        return;
+      }
       // Nur übernehmen, wenn der Tag inzwischen nicht weitergewandert ist.
       if (dateKey(selectedRef.current) !== key) return;
       setEntries(rows.map((row) => ({ ...row, totals: nutrientsForPortion(row.per100g, row.grams) })));
@@ -90,7 +99,9 @@ export default function Dashboard() {
   useFocusEffect(
     useCallback(() => {
       refreshToday();
-      getProfile(db).then(setProfile);
+      getProfile(db)
+        .then(setProfile)
+        .catch(() => setLoadFailed(true));
       loadEntries(dateKey(selectedRef.current));
     }, [db, loadEntries, refreshToday]),
   );
@@ -198,6 +209,19 @@ export default function Dashboard() {
   const shownEntries = entries ?? [];
   const totals = useMemo(() => sumNutrients(shownEntries.map((e) => e.totals)), [shownEntries]);
 
+  if (loadFailed) {
+    return (
+      <LoadError
+        onRetry={() => {
+          setLoadFailed(false);
+          getProfile(db)
+            .then(setProfile)
+            .catch(() => setLoadFailed(true));
+          loadEntries(selectedKey);
+        }}
+      />
+    );
+  }
   if (profile === undefined) return <View style={styles.screen} />;
   if (profile === null) return <Redirect href="/onboarding" />;
 
