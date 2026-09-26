@@ -15,14 +15,14 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 
 ## 2. App in App Store Connect anlegen
 
-- [ ] *Apps → + → Neue App*
+- [x] *Apps → + → Neue App* – angelegt am 26.09.2026, Apple-ID **6816385956**
   - Plattform: iOS
-  - Name (App-Store-Name, max. 30 Zeichen): **Hachibu** – geprüft und frei, siehe *2a. Namensprüfung*. Derselbe Name steht auf dem Homescreen (`app.json` → `name`).
+  - Name (App-Store-Name, max. 30 Zeichen): **Hachibu – Kalorienzähler**, siehe *2a. Namensprüfung*. Auf dem Homescreen steht weiter **Hachibu** (`app.json` → `name`).
   - Primäre Sprache: Deutsch
   - Bundle-ID: **com.abdelkarim.hachibu** (`app.json` → `ios.bundleIdentifier`; muss zuerst unter *Certificates, Identifiers & Profiles* existieren – `eas build` legt sie beim ersten Build an). **Nach dem ersten Upload nicht mehr änderbar**, siehe *2b. Bundle-ID*.
   - SKU: frei wählbar, z. B. `hachibu-ios`
   - Benutzerzugriff: Vollzugriff
-- [ ] Unter *App-Informationen → Allgemeine Informationen* die **Apple-ID** (nur Ziffern) ablesen und in `eas.json` bei `submit.production.ios.ascAppId` statt `TODO_ASC_APP_ID` eintragen.
+- [x] Apple-ID `6816385956` steht in `eas.json` bei `submit.production.ios.ascAppId`.
 - [ ] Kategorie: **Gesundheit & Fitness** (primär). Sekundär optional, z. B. *Essen & Trinken*.
 - [ ] Copyright: `2026 Karim Abu Elkheir` <!-- TODO: bestätigen -->
 
@@ -30,7 +30,9 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 
 - App-Store-Namen sind weltweit eindeutig. Ist ein Name vergeben, lässt App Store Connect ihn nicht mehr reservieren; Groß- und Kleinschreibung macht dabei keinen Unterschied.
 - Geprüft über die öffentliche Suchschnittstelle von Apple (`https://itunes.apple.com/search?term=hachibu&entity=software`, Storefronts Deutschland und USA): **kein Treffer**. „Hachibu“ ist als App-Store-Name frei.
-- Name: **`Hachibu`** (7 von 30 Zeichen), Untertitel `Kalorien scannen & zählen`. Ein beschreibender Zusatz im Namen ist nicht nötig, weil Apple den Untertitel ohnehin mit indexiert. Guideline 2.3.7 (kein Keyword-Stapeln) ist damit unproblematisch, Guideline 2.3.8 ebenfalls, weil der Name auf dem Gerät identisch ist.
+- **Nachtrag 26.09.2026:** Beim Anlegen meldete App Store Connect „Hachibu“ als bereits verwendet. Es gibt keine veröffentlichte App dieses Namens – jemand hat ihn reserviert, ohne zu veröffentlichen. Solche Reservierungen sind über die Suchschnittstelle nicht sichtbar; die Prüfung oben war deshalb unvollständig.
+- Store-Name deshalb: **`Hachibu – Kalorienzähler`** (24 von 30 Zeichen). Auf dem Homescreen bleibt `Hachibu`. Guideline 2.3.8 ist erfüllt, weil der Gerätename im Store-Namen steckt; 2.3.7 ebenfalls, weil es ein einziger beschreibender Zusatz ist.
+- Untertitel: `Barcode scannen, ohne Konto` – „Kalorien“ steht schon im Namen.
 - Vorgeschichte: Der frühere Arbeitsname „Halabi“ war im App Store schon von einer anderen App belegt (Anbieter Yaseen Halabi, Social Networking). Das war der Anlass für den Wechsel auf Hachibu.
 - [ ] Markenrecherche vor dem Anlegen: [DPMAregister](https://register.dpma.de/DPMAregister/marke/experte), [EUIPO eSearch](https://euipo.europa.eu/eSearch/) und [TMview](https://www.tmdn.org/tmview/) nach „Hachibu“ in Klasse 9 (Software) und 42/44 durchsuchen. Als Fantasiewort ist das Risiko geringer als bei einem Familiennamen, aber die Prüfung bleibt nötig: Bei einer Markenbeschwerde entfernt Apple die App. Die Register lassen sich nur von Hand durchsuchen, und die Bewertung des Ergebnisses ist Rechtsberatung.
 
@@ -209,17 +211,17 @@ Die drei Barcodes wurden am 15.09.2026 (zweimal) über die Open-Food-Facts-API m
 
 Ohne Heilversprechen und ohne medizinische Aussagen.
 
-**Name** (max. 30 Zeichen, 7 genutzt): `Hachibu`
+**Name** (max. 30 Zeichen, 24 genutzt): `Hachibu – Kalorienzähler`
 
-**Untertitel** (max. 30 Zeichen, 25 genutzt): `Kalorien scannen & zählen`
+**Untertitel** (max. 30 Zeichen, 27 genutzt): `Barcode scannen, ohne Konto`
 
-**Keywords** (max. 100 Bytes, Umlaute zählen doppelt; 95 Bytes genutzt):
+**Keywords** (max. 100 Bytes, Umlaute zählen doppelt; 92 Bytes genutzt):
 
 ```text
-Kalorienzähler,Makros,Barcode,Scanner,Ernährung,Protein,Nährwerte,Lebensmittel,Diät,Tracker
+Kalorien,zählen,Makros,Scanner,Ernährung,Protein,Nährwerte,Lebensmittel,Diät,Tracker,EAN
 ```
 
-Apple sucht auch in Name und Untertitel. „Kalorien“, „scannen“ und „zählen“ stehen deshalb nicht in den Keywords – der Untertitel deckt sie ab. Weil der Name selbst kein beschreibendes Wort enthält, steht „Tracker“ hier.
+Apple sucht auch in Name und Untertitel. „Kalorienzähler“, „Barcode“, „scannen“ und „Konto“ stehen deshalb nicht in den Keywords. „Kalorien“ und „zählen“ stehen einzeln drin, damit auch getrennte Suchen wie „Kalorien zählen“ greifen.
 
 **Werbetext** (optional, max. 170 Zeichen):
 
