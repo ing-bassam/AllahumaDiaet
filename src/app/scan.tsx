@@ -6,7 +6,7 @@ import { AppState, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, St
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
-import { NumericDoneBar, numericAccessoryProps } from '../components/NumericDoneBar';
+import { numericAccessoryProps } from '../components/numericKeyboard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { normalizeBarcode } from '../lib/barcode';
 import { colors, radius, spacing } from '../theme';
@@ -118,7 +118,6 @@ export default function Scanner() {
             <PrimaryButton label="Suchen" onPress={submitManual} disabled={manualCode.length < 8} />
             <PrimaryButton label="Abbrechen" variant="secondary" onPress={() => setManualOpen(false)} style={{ marginTop: spacing.sm }} />
           </View>
-          <NumericDoneBar />
         </KeyboardAvoidingView>
       </Modal>
     );

@@ -21,7 +21,7 @@ import { USER_AGENT } from '../../appInfo';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
 import { LabeledInput } from '../../components/LabeledInput';
-import { NumericDoneBar, numericAccessoryProps } from '../../components/NumericDoneBar';
+import { numericAccessoryProps } from '../../components/numericKeyboard';
 import { NutritionFields, useNutritionEditor } from '../../components/NutritionFields';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import {
@@ -151,7 +151,6 @@ export default function ProductScreen() {
         />
       )}
 
-      <NumericDoneBar />
     </KeyboardAvoidingView>
   );
 }
@@ -311,7 +310,8 @@ function PortionForm({ food, persisted, day, onFoodChange, onSaved }: PortionFor
             maxLength={6}
             accessibilityLabel="Menge in Gramm"
             returnKeyType="done"
-            onSubmitEditing={save}
+            // Auf iOS schließt „Fertig“ nur die Tastatur, damit noch die Mahlzeit gewählt werden kann.
+            onSubmitEditing={Platform.OS === 'android' ? save : undefined}
           />
           <Text style={styles.amountUnit}>g</Text>
         </View>

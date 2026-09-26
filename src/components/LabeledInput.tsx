@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { colors, radius } from '../theme';
-import { isNumericKeyboard, numericAccessoryProps } from './NumericDoneBar';
+import { isNumericKeyboard, numericAccessoryProps } from './numericKeyboard';
 
 type Props = Omit<TextInputProps, 'style'> & { label: string; unit?: string; error?: string | null };
 

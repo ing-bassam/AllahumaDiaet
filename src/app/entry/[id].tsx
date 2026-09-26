@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
-import { NumericDoneBar, numericAccessoryProps } from '../../components/NumericDoneBar';
+import { numericAccessoryProps } from '../../components/numericKeyboard';
 import { NutritionFields, useNutritionEditor } from '../../components/NutritionFields';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { deleteLogEntry, getLogEntry, updateFoodNutrients, updateLogEntry, type LogEntryDetail } from '../../db/repository';
@@ -216,7 +216,6 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
         <PrimaryButton label="Eintrag löschen" variant="danger" onPress={confirmDelete} style={{ marginTop: spacing.sm }} />
       </View>
 
-      <NumericDoneBar />
     </KeyboardAvoidingView>
   );
 }
