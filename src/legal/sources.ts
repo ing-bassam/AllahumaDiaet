@@ -12,7 +12,8 @@ export type Source = {
 export const CALCULATION_STEPS = [
   'Grundumsatz nach Mifflin-St. Jeor: 10 × Gewicht in kg + 6,25 × Größe in cm − 5 × Alter, dann + 5 bei Männern und − 161 bei Frauen.',
   'Gesamtumsatz: Grundumsatz × PAL-Faktor deines Aktivitätslevels (1,4 bis 2,3).',
-  'Tagesziel: Gesamtumsatz − 500 kcal beim Abnehmen, + 300 kcal beim Zunehmen, sonst der Gesamtumsatz. Das Ziel liegt nie unter deinem Grundumsatz.',
+  'Tagesziel: Gesamtumsatz − 500 kcal beim Abnehmen, + 300 kcal beim Zunehmen, sonst der Gesamtumsatz. Das berechnete Ziel liegt nie unter deinem Grundumsatz.',
+  'Eigenes Tagesziel: Statt der Berechnung kannst du ein Ziel zwischen 1.200 und 5.000 kcal festlegen. Liegt es unter deinem Grundumsatz, weist die App darauf hin.',
   'Makronährstoffe: Anteil am Tagesziel, umgerechnet mit 4 kcal je Gramm Protein und Kohlenhydrate und 9 kcal je Gramm Fett.',
 ];
 

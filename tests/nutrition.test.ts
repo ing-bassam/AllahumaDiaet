@@ -4,6 +4,8 @@ import { describe, it } from 'node:test';
 import {
   bmrMifflinStJeor,
   calculateCalorieGoal,
+  chooseDailyGoal,
+  CUSTOM_GOAL_LIMITS,
   DEFAULT_MACRO_SPLIT,
   isValidMacroSplit,
   macroGoalsInGrams,
@@ -80,6 +82,31 @@ describe('calculateCalorieGoal', () => {
     assert.equal(goal.bmr, 1132);
     assert.equal(goal.dailyGoal, 1140);
     assert.equal(goal.adjustment, -453);
+  });
+});
+
+describe('chooseDailyGoal', () => {
+  // Grundumsatz 1780, Tagesziel 1990 (80 → 72 kg)
+  const goal = calculateCalorieGoal({ age: 30, sex: 'male', heightCm: 180, weightKg: 80, goalWeightKg: 72, activityLevel: 'sedentary' });
+
+  it('nimmt ohne eigenes Ziel die Berechnung', () => {
+    assert.deepEqual(chooseDailyGoal(goal, { enabled: false, kcal: 3000 }), { dailyGoal: 1990, isCustom: false, belowBmr: false });
+  });
+
+  it('übernimmt ein eigenes Ziel ganzzahlig', () => {
+    assert.deepEqual(chooseDailyGoal(goal, { enabled: true, kcal: 2200.4 }), { dailyGoal: 2200, isCustom: true, belowBmr: false });
+  });
+
+  it('erlaubt Ziele unter dem Grundumsatz, markiert sie aber', () => {
+    assert.deepEqual(chooseDailyGoal(goal, { enabled: true, kcal: 1500 }), { dailyGoal: 1500, isCustom: true, belowBmr: true });
+  });
+
+  it('akzeptiert genau die Grenzen und lehnt alles außerhalb ab', () => {
+    assert.equal(chooseDailyGoal(goal, { enabled: true, kcal: CUSTOM_GOAL_LIMITS.min })?.dailyGoal, 1200);
+    assert.equal(chooseDailyGoal(goal, { enabled: true, kcal: CUSTOM_GOAL_LIMITS.max })?.dailyGoal, 5000);
+    assert.equal(chooseDailyGoal(goal, { enabled: true, kcal: 1199 }), null);
+    assert.equal(chooseDailyGoal(goal, { enabled: true, kcal: 5001 }), null);
+    assert.equal(chooseDailyGoal(goal, { enabled: true, kcal: null }), null);
   });
 });
 

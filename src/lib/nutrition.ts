@@ -85,6 +85,32 @@ export function calculateCalorieGoal(input: GoalInput): CalorieGoal {
   return { bmr: Math.round(bmr), tdee: Math.round(tdee), adjustment: effectiveAdjustment, dailyGoal };
 }
 
+/**
+ * Grenzen für ein selbst gewähltes Tagesziel. Die Untergrenze verhindert gesundheitlich bedenklich
+ * niedrige Ziele; zwischen ihr und dem Grundumsatz zeigt die App nur einen Hinweis.
+ */
+export const CUSTOM_GOAL_LIMITS = { min: 1200, max: 5000 } as const;
+
+export type DailyGoalChoice = {
+  /** Gilt ab jetzt als Tagesziel, in ganzen kcal. */
+  dailyGoal: number;
+  isCustom: boolean;
+  /** Das eigene Ziel liegt unter dem berechneten Grundumsatz. */
+  belowBmr: boolean;
+};
+
+/**
+ * Tagesziel aus der Berechnung oder aus dem eigenen Wert. `null`, wenn ein eigenes Ziel gewählt ist,
+ * aber fehlt oder außerhalb von CUSTOM_GOAL_LIMITS liegt.
+ */
+export function chooseDailyGoal(goal: CalorieGoal, custom: { enabled: boolean; kcal: number | null }): DailyGoalChoice | null {
+  if (!custom.enabled) return { dailyGoal: goal.dailyGoal, isCustom: false, belowBmr: false };
+  if (custom.kcal === null || !Number.isFinite(custom.kcal)) return null;
+  const kcal = Math.round(custom.kcal);
+  if (kcal < CUSTOM_GOAL_LIMITS.min || kcal > CUSTOM_GOAL_LIMITS.max) return null;
+  return { dailyGoal: kcal, isCustom: true, belowBmr: kcal < goal.bmr };
+}
+
 export function macroGoalsInGrams(dailyCalories: number, split: MacroSplit): MacroSplit {
   return {
     protein: Math.round((dailyCalories * split.protein) / KCAL_PER_GRAM.protein),

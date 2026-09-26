@@ -72,7 +72,16 @@ export const MIGRATION_V2_SQL = `
   PRAGMA user_version = 2;
 `;
 
-export const LATEST_DATABASE_VERSION = 2;
+/** Version 2 → 3. Muss in einer Transaktion laufen; setzt user_version selbst. */
+export const MIGRATION_V3_SQL = `
+  -- 1, wenn daily_calorie_goal von Hand gesetzt wurde. Sonst folgt das Ziel der Berechnung und wird
+  -- beim nächsten Speichern des Profils neu berechnet.
+  ALTER TABLE user_profile ADD COLUMN calorie_goal_is_custom INTEGER NOT NULL DEFAULT 0;
+
+  PRAGMA user_version = 3;
+`;
+
+export const LATEST_DATABASE_VERSION = 3;
 
 /**
  * Speichert ein Produkt. Ein vom Nutzer korrigierter Datensatz (user_edited = 1) wird nie überschrieben;

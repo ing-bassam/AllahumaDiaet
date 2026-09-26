@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '../components/Chip';
@@ -12,6 +12,8 @@ import { formatInt, parseDecimal, toInputText } from '../lib/format';
 import {
   ACTIVITY_LEVELS,
   calculateCalorieGoal,
+  chooseDailyGoal,
+  CUSTOM_GOAL_LIMITS,
   DEFAULT_MACRO_SPLIT,
   isValidMacroSplit,
   LIMITS,
@@ -52,6 +54,8 @@ export default function Onboarding() {
   const [fat, setFat] = useState(toPercent(DEFAULT_MACRO_SPLIT.fat));
   const [saving, setSaving] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [useCustomGoal, setUseCustomGoal] = useState(false);
+  const [customGoal, setCustomGoal] = useState('');
 
   // Beim Bearbeiten die gespeicherten Werte vorbefüllen.
   useEffect(() => {
@@ -67,6 +71,10 @@ export default function Onboarding() {
       setProtein(toPercent(p.macroSplit.protein));
       setCarbs(toPercent(p.macroSplit.carbs));
       setFat(toPercent(p.macroSplit.fat));
+      if (p.calorieGoalIsCustom) {
+        setUseCustomGoal(true);
+        setCustomGoal(String(p.dailyCalorieGoal));
+      }
     });
   }, [db]);
 
@@ -95,11 +103,14 @@ export default function Onboarding() {
         })
       : null;
 
-  const canSave = goal !== null && splitValid && !saving;
-  const macroGrams = goal && splitValid ? macroGoalsInGrams(goal.dailyGoal, macroSplit) : null;
+  const choice = goal ? chooseDailyGoal(goal, { enabled: useCustomGoal, kcal: parseDecimal(customGoal) }) : null;
+  const customGoalError = useCustomGoal ? rangeError(customGoal, CUSTOM_GOAL_LIMITS, 'kcal') : null;
+
+  const canSave = choice !== null && splitValid && !saving;
+  const macroGrams = choice && splitValid ? macroGoalsInGrams(choice.dailyGoal, macroSplit) : null;
 
   const handleSave = async () => {
-    if (!goal || !sex || !activity || ageValue === null || heightValue === null || weightValue === null || goalWeightValue === null) return;
+    if (!choice || !sex || !activity || ageValue === null || heightValue === null || weightValue === null || goalWeightValue === null) return;
     setSaving(true);
     try {
       await saveProfile(db, {
@@ -109,7 +120,8 @@ export default function Onboarding() {
         weightKg: weightValue,
         goalWeightKg: goalWeightValue,
         activityLevel: activity,
-        dailyCalorieGoal: goal.dailyGoal,
+        dailyCalorieGoal: choice.dailyGoal,
+        calorieGoalIsCustom: choice.isCustom,
         macroSplit,
       });
       if (router.canGoBack()) router.back();
@@ -136,7 +148,7 @@ export default function Onboarding() {
         contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.intro}>Einmal ausfüllen. Daraus berechnen wir dein tägliches Kalorienziel.</Text>
+        <Text style={styles.intro}>Einmal ausfüllen. Daraus berechnen wir dein tägliches Kalorienziel – oder du legst es selbst fest.</Text>
 
         <View style={styles.row}>
           <View style={styles.half}>
@@ -195,7 +207,8 @@ export default function Onboarding() {
 
         <View style={styles.result}>
           <Text style={styles.resultLabel}>Dein Tagesziel</Text>
-          <Text style={styles.resultValue}>{goal ? `${formatInt(goal.dailyGoal)} kcal` : '–'}</Text>
+          <Text style={styles.resultValue}>{choice ? `${formatInt(choice.dailyGoal)} kcal` : '–'}</Text>
+          {goal && useCustomGoal && <Text style={styles.resultHint}>Eigenes Ziel · berechnet wären {formatInt(goal.dailyGoal)} kcal</Text>}
           {goal && <Text style={styles.resultHint}>Grundumsatz {formatInt(goal.bmr)} kcal · {goalHint}</Text>}
           {macroGrams && (
             <Text style={styles.resultHint}>
@@ -203,6 +216,38 @@ export default function Onboarding() {
             </Text>
           )}
         </View>
+
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Eigenes Tagesziel festlegen</Text>
+          <Switch
+            value={useCustomGoal}
+            onValueChange={(on) => {
+              setUseCustomGoal(on);
+              // Mit dem berechneten Wert starten, damit man nur noch anpassen muss.
+              if (on && customGoal.trim() === '' && goal) setCustomGoal(String(goal.dailyGoal));
+            }}
+            trackColor={{ true: colors.primary, false: colors.track }}
+            accessibilityLabel="Eigenes Tagesziel festlegen"
+          />
+        </View>
+        {useCustomGoal && (
+          <>
+            <LabeledInput
+              label="Eigenes Tagesziel"
+              unit="kcal"
+              keyboardType="number-pad"
+              value={customGoal}
+              onChangeText={setCustomGoal}
+              error={customGoalError}
+            />
+            {choice?.belowBmr && goal && (
+              <Text style={styles.warning}>
+                Dein Ziel liegt unter deinem Grundumsatz von {formatInt(goal.bmr)} kcal. So wenig Energie über längere Zeit
+                solltest du nur nach ärztlicher oder ernährungsfachlicher Beratung einplanen.
+              </Text>
+            )}
+          </>
+        )}
 
         <PrimaryButton label="Speichern" onPress={handleSave} disabled={!canSave} loading={saving} />
 
@@ -254,6 +299,9 @@ const styles = StyleSheet.create({
   resultLabel: { fontSize: 14, color: colors.textMuted },
   resultValue: { fontSize: 34, fontWeight: '800', color: colors.text, marginVertical: 4 },
   resultHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 2 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
+  switchLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.text },
+  warning: { fontSize: 13, lineHeight: 19, color: colors.danger, marginTop: -6, marginBottom: spacing.md },
   note: { fontSize: 13, color: colors.textMuted, marginTop: spacing.md, lineHeight: 19, textAlign: 'center' },
   aboutLink: { alignSelf: 'center', paddingVertical: spacing.xs, marginTop: spacing.md },
   aboutLinkText: { color: colors.primary, fontSize: 14, fontWeight: '600' },

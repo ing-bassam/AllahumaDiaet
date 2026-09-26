@@ -17,6 +17,8 @@ export type Profile = {
   goalWeightKg: number;
   activityLevel: ActivityLevel;
   dailyCalorieGoal: number;
+  /** Das Tagesziel wurde von Hand festgelegt und folgt nicht der Berechnung. */
+  calorieGoalIsCustom: boolean;
   macroSplit: MacroSplit;
 };
 
@@ -59,6 +61,7 @@ type ProfileRow = {
   goal_weight_kg: number;
   activity_level: ActivityLevel;
   daily_calorie_goal: number;
+  calorie_goal_is_custom: number;
   macro_split_protein: number;
   macro_split_carbs: number;
   macro_split_fat: number;
@@ -154,6 +157,7 @@ export async function getProfile(db: SQLiteDatabase): Promise<Profile | null> {
     goalWeightKg: row.goal_weight_kg,
     activityLevel: row.activity_level,
     dailyCalorieGoal: row.daily_calorie_goal,
+    calorieGoalIsCustom: row.calorie_goal_is_custom === 1,
     macroSplit: {
       protein: row.macro_split_protein,
       carbs: row.macro_split_carbs,
@@ -168,8 +172,8 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
   await db.runAsync(
     `INSERT INTO user_profile (
        id, age, sex, height_cm, weight_kg, goal_weight_kg, activity_level,
-       daily_calorie_goal, macro_split_protein, macro_split_carbs, macro_split_fat
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       daily_calorie_goal, calorie_goal_is_custom, macro_split_protein, macro_split_carbs, macro_split_fat
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (id) DO UPDATE SET
        age = excluded.age,
        sex = excluded.sex,
@@ -178,6 +182,7 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
        goal_weight_kg = excluded.goal_weight_kg,
        activity_level = excluded.activity_level,
        daily_calorie_goal = excluded.daily_calorie_goal,
+       calorie_goal_is_custom = excluded.calorie_goal_is_custom,
        macro_split_protein = excluded.macro_split_protein,
        macro_split_carbs = excluded.macro_split_carbs,
        macro_split_fat = excluded.macro_split_fat`,
@@ -189,6 +194,7 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
     profile.goalWeightKg,
     profile.activityLevel,
     profile.dailyCalorieGoal,
+    profile.calorieGoalIsCustom ? 1 : 0,
     profile.macroSplit.protein,
     profile.macroSplit.carbs,
     profile.macroSplit.fat,
