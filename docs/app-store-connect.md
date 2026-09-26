@@ -186,6 +186,7 @@ Weitere Funktionen:
 - Unbekannte Barcodes führen zu einem Formular, in dem Nährwerte einmalig manuell erfasst werden.
 - Ein Eintrag auf dem Startbildschirm lässt sich antippen und bearbeiten (Menge, Mahlzeit, Nährwerte).
 - In der Suche kann über „… als eigenes Lebensmittel anlegen“ ein Lebensmittel ohne Barcode angelegt werden.
+- Hat der Vortag Einträge, bietet die Startseite unter „Wie gestern eintragen“ an, fehlende Mahlzeiten zu übernehmen.
 
 Die Kamera-Berechtigung wird nur für das Scannen von Barcodes verwendet.
 Daten löschen: Startbildschirm → „Info & Rechtliches“ → „Alle Daten löschen“.
@@ -253,6 +254,7 @@ DEIN TAG AUF EINEN BLICK
 • Kalorienring mit verbleibenden Kalorien
 • Balken für Protein, Kohlenhydrate und Fett
 • Einträge nach Frühstück, Mittagessen, Abendessen und Snacks – antippen zum Bearbeiten
+• Mahlzeiten vom Vortag mit einem Tipp noch einmal eintragen
 
 DEIN TAGESZIEL
 • Berechnung aus Alter, Größe, Gewicht, Zielgewicht und Aktivität

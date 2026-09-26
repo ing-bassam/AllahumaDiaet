@@ -12,6 +12,7 @@ import { Icon } from '../components/Icon';
 import { LoadError } from '../components/LoadError';
 import { MacroBar } from '../components/MacroBar';
 import {
+  copyEntriesToDay,
   deleteLogEntry,
   getDatesWithEntries,
   getEntriesForDate,
@@ -27,11 +28,13 @@ import {
   endOfMonth,
   fullDateLabel,
   isSameDay,
+  parseDateKey,
   startOfDay,
   startOfMonth,
 } from '../lib/date';
 import { formatDecimal, formatInt, formatTime, MEAL_TYPES, type MealType } from '../lib/format';
 import { macroGoalsInGrams, nutrientsForPortion, sumNutrients, type Nutrients } from '../lib/nutrition';
+import { mealsToRepeat, type MealToRepeat } from '../lib/repeatMeals';
 import { colors, radius, spacing } from '../theme';
 
 type EntryWithTotals = LogEntryWithFood & { totals: Nutrients };
@@ -59,6 +62,9 @@ export default function Dashboard() {
   const [markedDates, setMarkedDates] = useState<string[]>([]);
   // Scheitert das Laden von Profil oder Tag, stünde sonst dauerhaft ein leerer Bildschirm da.
   const [loadFailed, setLoadFailed] = useState(false);
+  // Einträge des Vortags, damit fehlende Mahlzeiten „wie gestern“ übernommen werden können.
+  const [previousDayEntries, setPreviousDayEntries] = useState<LogEntryWithFood[]>([]);
+  const [repeating, setRepeating] = useState(false);
 
   const todayRef = useRef(today);
   const selectedRef = useRef(selectedDate);
@@ -73,9 +79,14 @@ export default function Dashboard() {
 
   const loadEntries = useCallback(
     async (key: string) => {
+      const day = parseDateKey(key);
       let rows;
+      let previous: LogEntryWithFood[];
       try {
-        rows = await getEntriesForDate(db, key);
+        [rows, previous] = await Promise.all([
+          getEntriesForDate(db, key),
+          day ? getEntriesForDate(db, dateKey(addDays(day, -1))) : Promise.resolve([]),
+        ]);
       } catch {
         setLoadFailed(true);
         return;
@@ -83,6 +94,7 @@ export default function Dashboard() {
       // Nur übernehmen, wenn der Tag inzwischen nicht weitergewandert ist.
       if (dateKey(selectedRef.current) !== key) return;
       setEntries(rows.map((row) => ({ ...row, totals: nutrientsForPortion(row.per100g, row.grams) })));
+      setPreviousDayEntries(previous);
     },
     [db],
   );
@@ -119,6 +131,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Alte Einträge sofort ausblenden, damit nie ein fremder Tag stehen bleibt.
     setEntries(null);
+    setPreviousDayEntries([]);
     loadEntries(selectedKey);
   }, [selectedKey, loadEntries]);
 
@@ -226,6 +239,30 @@ export default function Dashboard() {
   if (profile === null) return <Redirect href="/onboarding" />;
 
   const macroGoals = macroGoalsInGrams(profile.dailyCalorieGoal, profile.macroSplit);
+  // Erst anbieten, wenn der Tag geladen ist, sonst blitzte es kurz für schon belegte Mahlzeiten auf.
+  const repeatable = entries === null ? [] : mealsToRepeat(previousDayEntries, shownEntries);
+  const previousDayLabel = isToday ? 'gestern' : 'am Vortag';
+
+  const repeatMeal = (meal: MealToRepeat<LogEntryWithFood>) => {
+    const names = meal.entries.map((e) => `• ${e.name} (${formatDecimal(e.grams)} g)`).join('\n');
+    Alert.alert(`${meal.label} wie ${previousDayLabel}?`, names, [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Eintragen',
+        onPress: async () => {
+          setRepeating(true);
+          try {
+            await copyEntriesToDay(db, meal.entries, selectedDate);
+            await loadEntries(selectedKey);
+          } catch {
+            Alert.alert('Eintragen fehlgeschlagen', 'Bitte versuche es erneut.');
+          } finally {
+            setRepeating(false);
+          }
+        },
+      },
+    ]);
+  };
 
   const confirmDelete = (entry: EntryWithTotals) => {
     Alert.alert('Eintrag löschen?', `${entry.name} (${formatInt(entry.grams)} g)`, [
@@ -352,6 +389,29 @@ export default function Dashboard() {
                   );
                 })}
 
+            {repeatable.length > 0 && (
+              <View style={styles.repeat}>
+                <Text style={styles.repeatTitle}>Wie {previousDayLabel} eintragen</Text>
+                <View style={styles.repeatChips}>
+                  {repeatable.map((meal) => (
+                    <Pressable
+                      key={meal.mealType}
+                      onPress={() => repeatMeal(meal)}
+                      disabled={repeating}
+                      style={({ pressed }) => [styles.repeatChip, pressed && { backgroundColor: colors.surfacePressed }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${meal.label} wie ${previousDayLabel} eintragen, ${meal.entries.length} Einträge`}
+                    >
+                      <Icon name="plus" size={16} color={colors.primary} />
+                      <Text style={styles.repeatChipText}>
+                        {meal.label} ({meal.entries.length})
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
+
             {shownEntries.length > 0 && <Text style={styles.hint}>Tippen zum Bearbeiten</Text>}
             <Text style={styles.attribution}>Daten & Bilder: Open Food Facts (ODbL, CC BY-SA)</Text>
             <Pressable onPress={() => router.push('/about')} hitSlop={8} style={styles.aboutLink} accessibilityRole="link">
@@ -425,6 +485,21 @@ const styles = StyleSheet.create({
   ringWrap: { alignItems: 'center', paddingVertical: spacing.sm },
   macros: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
   empty: { textAlign: 'center', color: colors.textMuted, fontSize: 16, lineHeight: 24, marginTop: spacing.lg },
+  repeat: { marginTop: spacing.md },
+  repeatTitle: { fontSize: 14, fontWeight: '600', color: colors.textMuted, marginBottom: spacing.sm },
+  repeatChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  repeatChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  repeatChipText: { fontSize: 15, fontWeight: '600', color: colors.text },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   mealHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   mealTitle: { fontSize: 17, fontWeight: '700', color: colors.text },

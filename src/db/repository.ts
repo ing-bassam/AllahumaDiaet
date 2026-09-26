@@ -1,6 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { combineDayWithTime } from '../lib/date';
 import { localDateKey, type MealType } from '../lib/format';
 import { rankFoods, toLikePattern } from '../lib/localSearch';
 import type { ActivityLevel, MacroSplit, Nutrients, Sex } from '../lib/nutrition';
@@ -356,6 +357,24 @@ const LOG_ENTRY_SELECT = `
          f.name, f.brand, f.serving_size_g, f.image_url, f.source
     FROM log_entry e
     JOIN food_item f ON f.barcode = e.barcode`;
+
+/**
+ * Trägt Einträge eines anderen Tages noch einmal auf `day` ein: gleiche Menge, gleiche Mahlzeit, gleiche
+ * Uhrzeit und dieselben Nährwerte, die damals galten. Alles oder nichts.
+ */
+export async function copyEntriesToDay(db: SQLiteDatabase, entries: LogEntryWithFood[], day: Date): Promise<void> {
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    for (const entry of entries) {
+      await addLogEntry(txn, {
+        barcode: entry.barcode,
+        grams: entry.grams,
+        mealType: entry.mealType,
+        per100g: entry.per100g,
+        at: combineDayWithTime(day, new Date(entry.timestamp)),
+      });
+    }
+  });
+}
 
 export async function getLogEntry(db: SQLiteDatabase, id: string): Promise<LogEntryDetail | null> {
   const row = await db.getFirstAsync<LogEntryRow>(`${LOG_ENTRY_SELECT} WHERE e.id = ?`, id);
