@@ -186,6 +186,7 @@ Weitere Funktionen:
 - Unbekannte Barcodes führen zu einem Formular, in dem Nährwerte einmalig manuell erfasst werden.
 - Ein Eintrag auf dem Startbildschirm lässt sich antippen und bearbeiten (Menge, Mahlzeit, Nährwerte).
 - In der Suche kann über „… als eigenes Lebensmittel anlegen“ ein Lebensmittel ohne Barcode angelegt werden.
+- Hat der Vortag Einträge, bietet die Startseite unter „Wie gestern eintragen“ an, fehlende Mahlzeiten zu übernehmen.
 
 Die Kamera-Berechtigung wird nur für das Scannen von Barcodes verwendet.
 Daten löschen: Startbildschirm → „Info & Rechtliches“ → „Alle Daten löschen“.
@@ -194,6 +195,8 @@ Berechnung des Kalorienziels (zu Guideline 1.4.1):
 - Grundumsatz nach Mifflin-St Jeor, Am J Clin Nutr 1990;51:241-247 (doi:10.1093/ajcn/51.2.241)
 - Gesamtumsatz über die PAL-Faktoren der Deutschen Gesellschaft für Ernährung
 - Defizit 500 kcal beim Abnehmen, Überschuss 300 kcal beim Zunehmen, nie unter dem Grundumsatz
+- Optional ein eigenes Tagesziel, begrenzt auf 1.200 bis 5.000 kcal; liegt es unter dem Grundumsatz,
+  zeigt die App einen sichtbaren Hinweis auf ärztliche oder ernährungsfachliche Beratung
 - Makronährstoffe mit 4/4/9 kcal je Gramm nach Verordnung (EU) 1169/2011 Anhang XIV
 
 Methode und Quellen sind in der App sichtbar: „Info & Rechtliches“ → „Berechnung & Quellen“,
@@ -251,9 +254,11 @@ DEIN TAG AUF EINEN BLICK
 • Kalorienring mit verbleibenden Kalorien
 • Balken für Protein, Kohlenhydrate und Fett
 • Einträge nach Frühstück, Mittagessen, Abendessen und Snacks – antippen zum Bearbeiten
+• Mahlzeiten vom Vortag mit einem Tipp noch einmal eintragen
 
 DEIN TAGESZIEL
 • Berechnung aus Alter, Größe, Gewicht, Zielgewicht und Aktivität
+• Oder eigenes Tagesziel festlegen
 • Makroverteilung frei einstellbar
 
 OHNE BALLAST

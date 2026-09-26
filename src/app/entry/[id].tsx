@@ -18,7 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
-import { NumericDoneBar, numericAccessoryProps } from '../../components/NumericDoneBar';
+import { LoadError } from '../../components/LoadError';
+import { numericAccessoryProps } from '../../components/numericKeyboard';
 import { NutritionFields, useNutritionEditor } from '../../components/NutritionFields';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { deleteLogEntry, getLogEntry, updateFoodNutrients, updateLogEntry, type LogEntryDetail } from '../../db/repository';
@@ -32,10 +33,17 @@ export default function EntryScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [entry, setEntry] = useState<LogEntryDetail | null | undefined>(undefined);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    getLogEntry(db, String(id)).then(setEntry);
-  }, [db, id]);
+    setLoadFailed(false);
+    getLogEntry(db, String(id))
+      .then(setEntry)
+      .catch(() => setLoadFailed(true));
+  }, [db, id, attempt]);
+
+  if (loadFailed) return <LoadError onRetry={() => setAttempt((n) => n + 1)} onClose={() => router.back()} />;
 
   if (entry === undefined) {
     return (
@@ -216,7 +224,6 @@ function EntryEditor({ entry }: { entry: LogEntryDetail }) {
         <PrimaryButton label="Eintrag löschen" variant="danger" onPress={confirmDelete} style={{ marginTop: spacing.sm }} />
       </View>
 
-      <NumericDoneBar />
     </KeyboardAvoidingView>
   );
 }

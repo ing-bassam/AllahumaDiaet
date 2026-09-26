@@ -5,7 +5,14 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 
-import { MIGRATION_V2_SQL, SCHEMA_V1_SQL, SCRUB_DELETED_DATA_SQL, UPSERT_FOOD_ITEM_SQL } from '../src/db/migrations.ts';
+import {
+  LATEST_DATABASE_VERSION,
+  MIGRATION_V2_SQL,
+  MIGRATION_V3_SQL,
+  SCHEMA_V1_SQL,
+  SCRUB_DELETED_DATA_SQL,
+  UPSERT_FOOD_ITEM_SQL,
+} from '../src/db/migrations.ts';
 
 /** Datenbank im Zustand einer Version-1-Installation mit echten Einträgen. */
 function createV1Database() {
@@ -94,6 +101,20 @@ describe('Migration v1 → v2', () => {
     const columns = db.prepare('PRAGMA table_info(log_entry)').all().map((c) => c.name);
     assert.ok(!columns.includes('calories_per_100g'));
     assert.equal((db.prepare('SELECT COUNT(*) AS n FROM log_entry').get() as { n: number }).n, 3);
+  });
+});
+
+describe('Migration v2 → v3', () => {
+  it('behält das Profil und markiert das Ziel als berechnet', () => {
+    const db = createV1Database();
+    migrate(db);
+    db.exec('BEGIN EXCLUSIVE;');
+    db.exec(MIGRATION_V3_SQL);
+    db.exec('COMMIT;');
+
+    assert.equal((db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version, LATEST_DATABASE_VERSION);
+    const row = db.prepare('SELECT daily_calorie_goal, calorie_goal_is_custom FROM user_profile').get();
+    assert.deepEqual({ ...row }, { daily_calorie_goal: 1990, calorie_goal_is_custom: 0 });
   });
 });
 

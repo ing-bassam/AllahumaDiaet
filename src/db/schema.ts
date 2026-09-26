@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { LATEST_DATABASE_VERSION, MIGRATION_V2_SQL, SCHEMA_V1_SQL } from './migrations';
+import { LATEST_DATABASE_VERSION, MIGRATION_V2_SQL, MIGRATION_V3_SQL, SCHEMA_V1_SQL } from './migrations';
 
 export const DATABASE_NAME = 'allahuma-diaet.db';
 
@@ -30,5 +30,12 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       await txn.execAsync(MIGRATION_V2_SQL);
     });
     currentVersion = 2;
+  }
+
+  if (currentVersion === 2) {
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      await txn.execAsync(MIGRATION_V3_SQL);
+    });
+    currentVersion = 3;
   }
 }

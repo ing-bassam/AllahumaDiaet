@@ -1,6 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { combineDayWithTime } from '../lib/date';
 import { localDateKey, type MealType } from '../lib/format';
 import { rankFoods, toLikePattern } from '../lib/localSearch';
 import type { ActivityLevel, MacroSplit, Nutrients, Sex } from '../lib/nutrition';
@@ -17,6 +18,8 @@ export type Profile = {
   goalWeightKg: number;
   activityLevel: ActivityLevel;
   dailyCalorieGoal: number;
+  /** Das Tagesziel wurde von Hand festgelegt und folgt nicht der Berechnung. */
+  calorieGoalIsCustom: boolean;
   macroSplit: MacroSplit;
 };
 
@@ -59,6 +62,7 @@ type ProfileRow = {
   goal_weight_kg: number;
   activity_level: ActivityLevel;
   daily_calorie_goal: number;
+  calorie_goal_is_custom: number;
   macro_split_protein: number;
   macro_split_carbs: number;
   macro_split_fat: number;
@@ -154,6 +158,7 @@ export async function getProfile(db: SQLiteDatabase): Promise<Profile | null> {
     goalWeightKg: row.goal_weight_kg,
     activityLevel: row.activity_level,
     dailyCalorieGoal: row.daily_calorie_goal,
+    calorieGoalIsCustom: row.calorie_goal_is_custom === 1,
     macroSplit: {
       protein: row.macro_split_protein,
       carbs: row.macro_split_carbs,
@@ -168,8 +173,8 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
   await db.runAsync(
     `INSERT INTO user_profile (
        id, age, sex, height_cm, weight_kg, goal_weight_kg, activity_level,
-       daily_calorie_goal, macro_split_protein, macro_split_carbs, macro_split_fat
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       daily_calorie_goal, calorie_goal_is_custom, macro_split_protein, macro_split_carbs, macro_split_fat
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (id) DO UPDATE SET
        age = excluded.age,
        sex = excluded.sex,
@@ -178,6 +183,7 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
        goal_weight_kg = excluded.goal_weight_kg,
        activity_level = excluded.activity_level,
        daily_calorie_goal = excluded.daily_calorie_goal,
+       calorie_goal_is_custom = excluded.calorie_goal_is_custom,
        macro_split_protein = excluded.macro_split_protein,
        macro_split_carbs = excluded.macro_split_carbs,
        macro_split_fat = excluded.macro_split_fat`,
@@ -189,6 +195,7 @@ export async function saveProfile(db: SQLiteDatabase, profile: Omit<Profile, 'id
     profile.goalWeightKg,
     profile.activityLevel,
     profile.dailyCalorieGoal,
+    profile.calorieGoalIsCustom ? 1 : 0,
     profile.macroSplit.protein,
     profile.macroSplit.carbs,
     profile.macroSplit.fat,
@@ -350,6 +357,24 @@ const LOG_ENTRY_SELECT = `
          f.name, f.brand, f.serving_size_g, f.image_url, f.source
     FROM log_entry e
     JOIN food_item f ON f.barcode = e.barcode`;
+
+/**
+ * Trägt Einträge eines anderen Tages noch einmal auf `day` ein: gleiche Menge, gleiche Mahlzeit, gleiche
+ * Uhrzeit und dieselben Nährwerte, die damals galten. Alles oder nichts.
+ */
+export async function copyEntriesToDay(db: SQLiteDatabase, entries: LogEntryWithFood[], day: Date): Promise<void> {
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    for (const entry of entries) {
+      await addLogEntry(txn, {
+        barcode: entry.barcode,
+        grams: entry.grams,
+        mealType: entry.mealType,
+        per100g: entry.per100g,
+        at: combineDayWithTime(day, new Date(entry.timestamp)),
+      });
+    }
+  });
+}
 
 export async function getLogEntry(db: SQLiteDatabase, id: string): Promise<LogEntryDetail | null> {
   const row = await db.getFirstAsync<LogEntryRow>(`${LOG_ENTRY_SELECT} WHERE e.id = ?`, id);
