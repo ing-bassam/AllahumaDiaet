@@ -45,11 +45,12 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 Die Seiten liegen im Ordner `docs/` und werden über GitHub Pages veröffentlicht.
 
 - [ ] Alle TODOs in `docs/datenschutz.md`, `docs/impressum.md` und `docs/support.md` klären und entfernen.
-- [ ] GitHub → Repository → *Settings → Pages* → *Deploy from a branch* → Branch `main`, Ordner `/docs` → *Save*.
-- [ ] Nach ein paar Minuten prüfen, ob die Seiten erreichbar sind:
-  - Datenschutz-URL: `https://abdelabu99-ai.github.io/AllahumaDiaet/datenschutz.html`
-  - Support-URL: `https://abdelabu99-ai.github.io/AllahumaDiaet/support.html`
-  - Impressum: `https://abdelabu99-ai.github.io/AllahumaDiaet/impressum.html`
+- [x] GitHub Pages ist für `ing-bassam/AllahumaDiaet` eingeschaltet (Branch `main`, Ordner `/docs`; Repository dafür am 26.09.2026 auf öffentlich gestellt). Jede Änderung in `docs/` auf `main` ist nach ein bis zwei Minuten online.
+- [ ] Nach dem Merge prüfen, ob die Seiten erreichbar sind:
+  - Datenschutz-URL: `https://ing-bassam.github.io/AllahumaDiaet/datenschutz.html`
+  - Support-URL: `https://ing-bassam.github.io/AllahumaDiaet/support.html`
+  - Impressum: `https://ing-bassam.github.io/AllahumaDiaet/impressum.html`
+- Die alten Adressen unter `abdelabu99-ai.github.io` bleiben erreichbar, bis das alte Konto abgeschaltet wird; sie werden nirgends mehr genannt.
 - [ ] Datenschutz-URL unter *App-Datenschutz* und Support-URL in der Versionsseite eintragen. Beide sind für jede App Pflicht. Laut Apple muss die Support-URL zu echten Kontaktinformationen führen.
 - [ ] Die gleichen URLs sind in der App hinterlegt (`src/legal/imprint.ts`). Ändern sie sich, dort anpassen.
 
