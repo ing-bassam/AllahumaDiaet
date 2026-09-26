@@ -4,9 +4,7 @@ title: Datenschutzerklärung – Hachibu
 
 # Datenschutzerklärung
 
-> **Entwurf, keine Rechtsberatung.** Alle mit TODO markierten Stellen vor der Veröffentlichung prüfen und die TODO-Hinweise entfernen.
-
-Stand: <!-- TODO: Datum der Veröffentlichung eintragen --> TT.MM.JJJJ
+Stand: 26.09.2026
 
 Diese Datenschutzerklärung gilt für die App **Hachibu** für iOS und Android sowie für diese Webseite.
 

@@ -4,8 +4,6 @@ title: Impressum – Hachibu
 
 # Impressum
 
-> **Entwurf, keine Rechtsberatung.** Alle mit TODO markierten Stellen vor der Veröffentlichung prüfen und die TODO-Hinweise entfernen.
-
 ## Angaben gemäß § 5 DDG
 
 Karim Abu Elkheir<br>
