@@ -7,12 +7,12 @@ title: Impressum – Hachibu
 ## Angaben gemäß § 5 DDG
 
 Karim Abu Elkheir<br>
-Nehringstraße 23<br>
-14059 Berlin<br>
+Bergmannstraße 3<br>
+10961 Berlin<br>
 Deutschland
 
 <!-- TODO (rechtliche Prüfung): § 5 DDG gilt für „geschäftsmäßige, in der Regel gegen Entgelt angebotene digitale Dienste“. Die App ist kostenlos, werbefrei und ohne Einnahmen, was dagegen spricht; „geschäftsmäßig“ wird jedoch weit ausgelegt und meint eine nachhaltige Tätigkeit auch ohne Gewinnerzielungsabsicht. Entscheiden lassen, ob diese Seite nötig ist. Die Angaben zum Verantwortlichen in der Datenschutzerklärung sind davon unabhängig Pflicht (Art. 13 Abs. 1 lit. a DSGVO). -->
-<!-- Angabe von dir: Nehringstraße 23, 14059 Berlin – eine Straßenanschrift, unter der Post zugestellt werden kann. Ein reines Postfach oder eine c/o-Adresse ohne Zustellvollmacht würde für § 5 DDG nicht genügen. Hinweis: Für den Händlerstatus im App Store (Digital Services Act) akzeptiert Apple dagegen auch ein Postfach – siehe docs/app-store-connect.md. -->
+<!-- Angabe von dir (seit 27.09.2026): Bergmannstraße 3, 10961 Berlin – eine Straßenanschrift, unter der Post zugestellt werden kann. Ein reines Postfach oder eine c/o-Adresse ohne Zustellvollmacht würde für § 5 DDG nicht genügen. Hinweis: Für den Händlerstatus im App Store (Digital Services Act) akzeptiert Apple dagegen auch ein Postfach – siehe docs/app-store-connect.md. -->
 
 ## Kontakt
 

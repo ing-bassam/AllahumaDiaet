@@ -3,8 +3,8 @@ import { CONTACT_EMAIL } from '../appInfo';
 // Angaben für das Impressum (§ 5 DDG). Die Webseite nutzt dieselben Daten in docs/impressum.md.
 export const IMPRINT = {
   name: 'Karim Abu Elkheir',
-  street: 'Nehringstraße 23',
-  postalCodeAndCity: '14059 Berlin',
+  street: 'Bergmannstraße 3',
+  postalCodeAndCity: '10961 Berlin',
   country: 'Deutschland',
   email: CONTACT_EMAIL,
   // TODO: Telefonnummer bewusst nicht im öffentlichen Repository. Prüfen, ob sie nötig ist; sonst leer lassen.

@@ -4,15 +4,15 @@ title: Datenschutzerklärung – Hachibu
 
 # Datenschutzerklärung
 
-Stand: 26.09.2026
+Stand: 27.09.2026
 
 Diese Datenschutzerklärung gilt für die App **Hachibu** für iOS und Android sowie für diese Webseite.
 
 ## 1. Verantwortlicher
 
 Karim Abu Elkheir<br>
-Nehringstraße 23<br>
-14059 Berlin<br>
+Bergmannstraße 3<br>
+10961 Berlin<br>
 Deutschland<br>
 E-Mail: [abdel.abu99@gmail.com](mailto:abdel.abu99@gmail.com)
 
