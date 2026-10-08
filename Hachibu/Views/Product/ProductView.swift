@@ -20,12 +20,12 @@ struct ProductView: View {
         case notFound, incomplete, error, custom
     }
 
-    enum State: Equatable {
+    enum LoadPhase: Equatable {
         case loading
         case ready(FoodItem, persisted: Bool)
         case manual(ManualReason, PartialProduct?)
 
-        static func == (lhs: State, rhs: State) -> Bool {
+        static func == (lhs: LoadPhase, rhs: LoadPhase) -> Bool {
             switch (lhs, rhs) {
             case (.loading, .loading): return true
             case (.ready(let a, let pa), .ready(let b, let pb)): return a == b && pa == pb
@@ -35,11 +35,11 @@ struct ProductView: View {
         }
     }
 
-    @State private var state: State = .loading
+    @State private var phase: LoadPhase = .loading
 
     var body: some View {
         Group {
-            switch state {
+            switch phase {
             case .loading:
                 VStack(spacing: 12) {
                     ProgressView()
@@ -52,7 +52,7 @@ struct ProductView: View {
                 PortionForm(food: food, persisted: persisted, fromScanner: fromScanner, onDone: onDone)
             case .manual(let reason, let partial):
                 ManualEntryForm(key: key, reason: reason, partial: partial, prefillName: prefillName, onRetry: { Task { await load() } }) { food in
-                    state = .ready(food, persisted: true)
+                    phase = .ready(food, persisted: true)
                 }
             }
         }
@@ -66,34 +66,34 @@ struct ProductView: View {
     }
 
     private func load() async {
-        state = .loading
+        phase = .loading
         if let local = try? model.repo.foodItem(key: key) {
-            state = .ready(local, persisted: true)
+            phase = .ready(local, persisted: true)
             return
         }
         if FoodKey.isCustom(key) {
-            state = .manual(.custom, nil)
+            phase = .manual(.custom, nil)
             return
         }
         if let hit = model.searchHit(for: key) {
             switch hit {
             case .found(let product):
-                state = .ready(FoodItem(product: product), persisted: false)
+                phase = .ready(FoodItem(product: product), persisted: false)
             case .incomplete(let partial):
-                state = .manual(.incomplete, partial)
+                phase = .manual(.incomplete, partial)
             }
             return
         }
         let result = await model.client.fetchProduct(barcode: key)
         switch result {
         case .found(let product):
-            state = .ready(FoodItem(product: product), persisted: false)
+            phase = .ready(FoodItem(product: product), persisted: false)
         case .incomplete(let partial):
-            state = .manual(.incomplete, partial)
+            phase = .manual(.incomplete, partial)
         case .notFound:
-            state = .manual(.notFound, nil)
+            phase = .manual(.notFound, nil)
         case .error:
-            state = .manual(.error, nil)
+            phase = .manual(.error, nil)
         }
     }
 }
