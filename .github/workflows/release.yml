@@ -55,6 +55,7 @@ jobs:
       - name: Archiv bauen (signiert)
         run: |
           set -o pipefail
+          mkdir -p build
           xcodebuild archive \
             -project Hachibu.xcodeproj \
             -scheme Hachibu \
@@ -71,6 +72,7 @@ jobs:
       - name: Zu App Store Connect hochladen
         run: |
           set -o pipefail
+          mkdir -p build
           xcodebuild -exportArchive \
             -archivePath build/Hachibu.xcarchive \
             -exportOptionsPlist ci/ExportOptions.plist \

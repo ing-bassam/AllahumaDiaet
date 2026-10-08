@@ -35,6 +35,7 @@ jobs:
       - name: Bauen und testen
         run: |
           set -o pipefail
+          mkdir -p build
           xcodebuild test \
             -project Hachibu.xcodeproj \
             -scheme Hachibu \
