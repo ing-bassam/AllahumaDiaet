@@ -1,104 +1,73 @@
 # Hachibu
 
-Kalorientracker-App für iPhone und Android nach dem Prinzip „Scan & Go“: öffnen, Barcode scannen, Menge eintippen, fertig.
+Kalorienzähler für das iPhone nach dem Prinzip „Scan & Go“: öffnen, Barcode scannen, Menge eintippen, fertig.
+Seit Version 2.0 komplett in SwiftUI geschrieben (iOS 17 oder neuer).
 
-- Keine Werbung, kein Konto, keine Cloud: Alle Daten bleiben auf dem Gerät (SQLite).
-- Produktdaten kommen von [Open Food Facts](https://world.openfoodfacts.org) (ODbL). Unbekannte Produkte werden einmalig manuell erfasst und lokal gespeichert.
-- Alternativ zum Scanner: Suche mit „Zuletzt verwendet“, „Häufig gegessen“, lokalen Treffern, Online-Suche (nur beim Absenden, unter dem Rate Limit von Open Food Facts) und eigenen Lebensmitteln ohne Barcode.
-- Nährwerte lassen sich pro Produkt korrigieren; jeder Tagebucheintrag speichert einen eigenen Nährwert-Schnappschuss und kann einzeln bearbeitet werden.
-- Kalorienziel nach Mifflin-St. Jeor × PAL-Faktor, Makroverteilung frei einstellbar (Standard 50 % KH / 30 % Protein / 20 % Fett).
+- Kein Konto, keine Werbung, keine Cloud, kein Tracking: Alle Daten bleiben in einer SQLite-Datenbank auf dem Gerät.
+- Produktdaten kommen von [Open Food Facts](https://world.openfoodfacts.org) (ODbL). Unbekannte Produkte werden einmal von Hand erfasst und sind danach auch offline da.
+- Suche mit Favoriten, „Zuletzt verwendet“, „Häufig gegessen“, lokalen Treffern und Online-Suche (nur beim Absenden, unter dem Rate Limit von Open Food Facts).
+- Schnelleintrag nur mit Kalorien (Restaurant, Kantine) und Mahlzeiten vom Vortag mit einem Tipp übernehmen.
+- Widgets für Homescreen und Sperrbildschirm: übrige Kalorien und Makros, Tippen öffnet den Scanner.
+- Verlauf: Wochenübersicht mit Tagesziel und Gewichtsverlauf.
+- Datensicherung als Datei (JSON) und Tagebuch-Export als CSV – wohin die Datei geht, entscheidet der Nutzer im Teilen-Menü.
+- Tagesziel nach Mifflin-St. Jeor × PAL-Faktor oder eigenes Ziel (1.200–5.000 kcal), Makroverteilung frei einstellbar.
 
-## Auf dem Handy testen
+Version 1.0 (React Native/Expo) ist seit dem 05.10.2026 im App Store. Version 2.0 nutzt dieselbe Bundle-ID und dieselbe Datenbankdatei, bestehende Tagebücher bleiben beim Update erhalten.
 
-1. Die App **Expo Go** installieren ([iOS](https://apps.apple.com/app/expo-go/id982107779) / [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
-2. Im Projektordner:
+## Bauen und testen – ohne Mac
 
-   ```bash
-   npm install
-   npx expo start --go
-   ```
+Swift lässt sich nur auf macOS übersetzen. Deshalb bauen und testen **GitHub Actions** auf einem macOS-Runner von GitHub:
 
-   `--go` ist nötig, weil das Projekt `expo-dev-client` enthält und `expo start` sonst einen Development Build erwartet.
+| Workflow | Wann | Was |
+| --- | --- | --- |
+| „Bauen und testen“ (`.github/workflows/ci.yml`) | bei jedem Push und Pull Request | erzeugt das Xcode-Projekt, baut die App im iPhone-Simulator, führt die Tests aus |
+| „App Store Upload“ (`.github/workflows/release.yml`) | von Hand unter *Actions → Run workflow* | baut signiert, lädt zu App Store Connect hoch (erscheint dann in TestFlight) |
 
-3. Den QR-Code im Terminal scannen – auf dem iPhone mit der Kamera-App, auf Android in Expo Go.
-   Handy und PC müssen im selben WLAN sein. Klappt das nicht, `npx expo start --go --tunnel` verwenden.
+Das Ergebnis steht unter *Actions*; das vollständige Protokoll hängt als Artefakt am Lauf. Lokal unter Windows oder Linux gibt es nichts zu starten.
 
-## Marke
-
-Die Vorlagen liegen in `assets/source/`: `icon.png` (Zeichen „H.“ auf Creme `#F7F6F3`) und `wordmark.png` (Schriftzug „Hachibu.“, transparent).
-`npm run icons` erzeugt daraus alle App-Icons und das Startbild und prüft Größe, Farbmodus, Alphakanal und die Android-Safe-Zone.
-Neue Vorlagen einfach dort ersetzen und das Skript erneut ausführen.
-
-## Entwicklung
-
-```bash
-npm test          # Rechenlogik, Barcode- und API-Parsing
-npm run typecheck # TypeScript
-```
-
-| Ordner | Inhalt |
-| --- | --- |
-| `src/app` | Screens (Expo Router): Dashboard, Profil, Scanner, Produkt eintragen |
-| `src/db` | SQLite-Schema und Abfragen |
-| `src/lib` | Reine Logik: Nährwerte, Barcodes, Open Food Facts, Formatierung |
-| `src/components` | UI-Bausteine |
-| `src/legal` | Impressum, rechtliche Links, generierte Lizenzliste |
-| `tests` | Tests mit dem eingebauten Node-Testrunner |
-| `scripts` | `npm run icons` (Icons und Startbild aus `assets/source/`), `npm run licenses` (Lizenzliste) |
-| `docs` | Datenschutz, Impressum, Support (GitHub Pages) und die App-Store-Connect-Checkliste |
-
-Nach dem Hinzufügen oder Aktualisieren von Paketen `npm run licenses` ausführen, damit die Liste unter *Info & Rechtliches* aktuell bleibt.
+Die Projektdatei `Hachibu.xcodeproj` wird nicht eingecheckt, sondern auf dem Runner mit [XcodeGen](https://github.com/yonaskolb/XcodeGen) aus `project.yml` erzeugt. Wer doch einen Mac hat: `brew install xcodegen && xcodegen generate`, dann `Hachibu.xcodeproj` in Xcode öffnen.
 
 ## Veröffentlichen
 
-Gebaut und hochgeladen wird mit [EAS](https://docs.expo.dev/eas/) in der Cloud – ein Mac ist nicht nötig.
-Die Profile stehen in `eas.json`:
+Einmalig drei Secrets im Repository anlegen (*Settings → Secrets and variables → Actions → New repository secret*):
 
-| Profil | Zweck |
-| --- | --- |
-| `development` | Development Build mit `expo-dev-client` zum Testen nativer Änderungen, interne Verteilung |
-| `preview` | Release-Build zum Testen auf registrierten Geräten, interne Verteilung |
-| `production` | Build für den App Store; die Build-Nummer wird automatisch erhöht |
+1. In [App Store Connect](https://appstoreconnect.apple.com) → *Benutzer und Zugriff → Integrationen → App-Store-Connect-API → Teamschlüssel* einen Schlüssel erzeugen: Name z. B. „GitHub Actions“, Zugriff **App Manager**.
+2. Die **Key ID** (10 Zeichen) als `ASC_KEY_ID`, die **Issuer ID** (über der Tabelle) als `ASC_ISSUER_ID` eintragen.
+3. Die `.p8`-Datei herunterladen (geht nur einmal) und ihren kompletten Inhalt – inklusive der Zeilen `-----BEGIN PRIVATE KEY-----` und `-----END PRIVATE KEY-----` – als `ASC_KEY_P8` eintragen. Die Datei danach sicher aufbewahren oder löschen. **Niemals ins Repository legen.**
+
+Dann: *Actions → „App Store Upload“ → Run workflow* (Branch `main`). Zertifikat und Provisioning-Profil legt Xcode mit dem Schlüssel selbst an (Cloud-Signierung); nichts davon liegt im Repository. Nach etwa 15 bis 25 Minuten erscheint der Build in App Store Connect unter *TestFlight* und kann einer Version zugeordnet werden.
 
 ### Versionen
 
-- **Sichtbare Version** (`1.0.0`): steht in `app.json` unter `version` und wird für jedes Update von Hand erhöht.
-- **Build-Nummer**: verwaltet EAS auf seinen Servern (`cli.appVersionSource: "remote"`), das Profil `production` erhöht sie bei jedem Build automatisch (`autoIncrement`). Ein `ios.buildNumber` oder `android.versionCode` in `app.json` wird deshalb **ignoriert** – bitte dort nicht eintragen.
+- **Sichtbare Version** (`2.0.0`): `MARKETING_VERSION` in `project.yml`, für jedes Update von Hand erhöhen.
+- **Build-Nummer**: setzt der Upload-Workflow automatisch auf `100 + Laufnummer`, damit sie bei jedem Upload größer ist als zuvor (die Expo-Builds gingen bis 6). Nicht von Hand eintragen.
 
-### Befehle in Reihenfolge
+Alles außerhalb des Codes (Screenshots, Store-Texte, Datenschutzangaben, Altersfreigabe, Prüfnotizen) steht in [`docs/app-store-connect.md`](docs/app-store-connect.md).
 
-```bash
-# 1. EAS CLI installieren und anmelden (einmalig)
-npm install -g eas-cli
-eas login
+## Aufbau
 
-# 2. Projekt bei Expo anlegen; trägt extra.eas.projectId in app.json ein (danach slug nicht mehr ändern)
-eas init
+| Ordner | Inhalt |
+| --- | --- |
+| `project.yml` | Beschreibung des Xcode-Projekts: Targets, Bundle-IDs, Info.plist-Einträge, Berechtigungen, Version |
+| `Hachibu/App` | Start der App, `AppModel` (Zustand, Deep Links, Widget-Daten), `AppInfo` (Name, Kontakt, Kennung gegenüber Open Food Facts) |
+| `Hachibu/Logic` | Reine Rechenlogik ohne Oberfläche: Nährwerte, Barcodes, Datum, lokale Suche, Mengen |
+| `Hachibu/Network` | Anbindung an Open Food Facts (Produktabfrage und Suche) |
+| `Hachibu/Data` | Datenbank: Migrationen, Öffnen, alle Abfragen, Sicherung und CSV-Export |
+| `Hachibu/Views` | SwiftUI-Screens: Tagebuch, Scanner, Produkt eintragen, Suche, Verlauf, Profil, Mehr |
+| `Hachibu/Legal` | Impressum, Links zu den Rechtstexten, Quellen der Berechnung, Lizenzen |
+| `Shared` | Code für App **und** Widget: Kalorienring, Zahlenformat, Tages-Schnappschuss |
+| `HachibuWidget` | Widget-Erweiterung (liest nur die Schnappschuss-Datei, nie die Datenbank) |
+| `HachibuTests` | Tests mit Swift Testing: Rechenlogik, Barcodes, API-Parsing, Datum, Migrationen, Sicherung |
+| `ci` | `ExportOptions.plist` für den Upload |
+| `docs` | Datenschutz, Impressum, Support (GitHub Pages) und die App-Store-Connect-Checkliste |
+| `assets/source` | Vorlagen der Marke: `icon.png` (Zeichen „H.“ auf Creme `#F7F6F3`) und `wordmark.png` |
 
-# 3. Nur falls eas.json fehlt: erzeugt die Datei. Hier liegt sie schon im Repository, der Schritt entfällt.
-eas build:configure
+Das App-Icon liegt als 1024 × 1024 px ohne Transparenz in `Hachibu/Assets.xcassets/AppIcon.appiconset/icon.png`; iOS erzeugt alle kleineren Größen selbst. Ein neues Icon dort ersetzen.
 
-# 4. Optional: letzte Build-Nummer übernehmen, falls die App schon einmal ohne EAS hochgeladen wurde
-eas build:version:set --platform ios
+## Datenbank
 
-# 5. Build für den App Store in der Cloud erstellen
-eas build --platform ios --profile production
+Die Datei `allahuma-diaet.db` liegt im Ordner `Documents/SQLite` der App – derselbe Ort wie in Version 1.0, deshalb bleibt das Tagebuch beim Update erhalten. Schema-Versionen 1 bis 3 stammen unverändert aus der ersten Version, Version 4 ergänzt Favoriten, Notizen für Schnelleinträge und den Gewichtsverlauf (`Hachibu/Data/Migrations.swift`). Zugriff über [GRDB.swift](https://github.com/groue/GRDB.swift), die einzige Fremdbibliothek.
 
-# 6. ascAppId in eas.json eintragen (siehe unten), dann zu App Store Connect hochladen
-eas submit --platform ios --profile production
-```
+## Rechtliches
 
-Beim ersten Build fragt EAS nach dem Apple-Konto und erstellt Zertifikat und Provisioning Profile selbst. Nichts davon gehört ins Repository.
-
-**`ascAppId` eintragen:** In `eas.json` steht unter `submit.production.ios.ascAppId` der Platzhalter `TODO_ASC_APP_ID`. Nachdem die App in App Store Connect angelegt ist, dort unter *App-Informationen → Apple-ID* die Nummer ablesen (nur Ziffern) und den Platzhalter damit ersetzen. Bis dahin fragt bzw. scheitert `eas submit`.
-
-### Auf eigenen Geräten testen (optional)
-
-```bash
-eas device:create
-eas build --platform ios --profile preview
-```
-
-iPhones müssen für interne Builds vorher mit `eas device:create` registriert werden.
-
-Weitere Schritte außerhalb des Codes (Datenschutzangaben, Screenshots, Altersfreigabe …) stehen in [`docs/app-store-connect.md`](docs/app-store-connect.md).
+Datenschutzerklärung, Impressum und Support-Seite liegen in `docs/` und werden über GitHub Pages unter `https://ing-bassam.github.io/AllahumaDiaet/` veröffentlicht. Die Adressen stecken in der App (`Hachibu/Legal/LegalInfo.swift`) und in App Store Connect – die Dateinamen deshalb nicht ändern.

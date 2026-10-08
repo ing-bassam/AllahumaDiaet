@@ -1,0 +1,55 @@
+# Baut die App im Simulator und führt die Tests aus – bei jedem Push und jedem Pull Request.
+# Läuft auf einem macOS-Runner von GitHub, deshalb braucht niemand einen eigenen Mac.
+name: Bauen und testen
+
+on:
+  push:
+    branches: [main, swiftui]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Simulator-Build und Tests
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Werkzeuge installieren
+        run: brew install xcodegen xcbeautify
+
+      - name: Xcode-Version
+        run: xcodebuild -version
+
+      - name: Xcode-Projekt aus project.yml erzeugen
+        run: xcodegen generate
+
+      - name: Pakete auflösen
+        run: xcodebuild -resolvePackageDependencies -project Hachibu.xcodeproj -scheme Hachibu
+
+      - name: Bauen und testen
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Hachibu.xcodeproj \
+            -scheme Hachibu \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -resultBundlePath build/Tests.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build/xcodebuild.log | xcbeautify --renderer github-actions
+
+      - name: Protokoll hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: |
+            build/xcodebuild.log
+            build/Tests.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
