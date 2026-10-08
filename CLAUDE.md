@@ -9,13 +9,14 @@
 - `Hachibu/App` – Start, `AppModel` (Zustand, Deep Links, Widget-Schnappschuss), `AppInfo` (Name, Kontakt, Kennung gegenüber Open Food Facts).
 - `Hachibu/Logic` – reine Rechenlogik ohne UI; `Hachibu/Network` – Open Food Facts; `Hachibu/Data` – Migrationen, Datenbank, Abfragen, Sicherung; `Hachibu/Views` – SwiftUI-Screens; `Hachibu/Legal` – Impressum, Links, Quellen.
 - `Shared/` – Code für App und Widget (Ring, Zahlenformat, Tages-Schnappschuss). `HachibuWidget/` – das Widget. `HachibuTests/` – Tests mit Swift Testing.
-- `.github/workflows/ci.yml` baut und testet im Simulator bei jedem Push und PR; `release.yml` lädt auf Knopfdruck signiert zu App Store Connect hoch (`ci/ExportOptions.plist` gehört dazu).
+- `.github/workflows/ci.yml` baut und testet im Simulator bei jedem Push und PR; `release.yml` lädt auf Knopfdruck signiert zu App Store Connect hoch; signiert wird mit fastlane (`fastlane/Fastfile`, `Gemfile`) über ein Zertifikat, das nur für diesen Lauf entsteht und danach widerrufen wird.
 - `docs/` – Datenschutz, Impressum, Support; GitHub Pages veröffentlicht den Ordner von `main` unter https://ing-bassam.github.io/AllahumaDiaet/.
 
 ## Befehle
 - Es gibt keinen Mac: Bauen und Testen laufen nur auf GitHub Actions (macOS-Runner). Unter Windows lässt sich Swift nicht übersetzen – also pushen und den Lauf lesen: `gh run list --workflow ci.yml`, `gh run view <id> --log-failed`.
 - Die Tests laufen im Workflow mit `xcodebuild test -scheme Hachibu -destination 'platform=iOS Simulator,name=iPhone 17'` (siehe `ci.yml`).
-- Upload in den App Store: Actions → „App Store Upload“ → Run workflow. Braucht die Secrets `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (App-Store-Connect-API-Schlüssel, Rolle App Manager) – nicht geprüft, bis die Secrets angelegt sind.
+- Upload in den App Store: Actions → „App Store Upload“ → Run workflow. Braucht die Secrets `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (Teamschlüssel mit Admin-Rolle) und einmalig die App Group `group.com.abdelkarim.hachibu` im Apple-Portal, beiden Bundle-IDs zugeordnet (README).
+- Xcodes automatische Signierung funktioniert auf dem Runner nicht: Im Konto ist kein Gerät registriert, und archivieren will immer zuerst ein Entwicklungsprofil. Deshalb fastlane mit manueller Signierung, nicht zurückbauen.
 - Für ein Update nur `MARKETING_VERSION` in `project.yml` erhöhen; die Build-Nummer setzt der Workflow (100 + Laufnummer).
 
 ## Regeln

@@ -1,16 +1,20 @@
 # Baut die App signiert und lädt sie zu App Store Connect hoch (erscheint dann in TestFlight).
-# Von Hand starten: GitHub → Actions → "App Store Upload" → Run workflow.
+# Von Hand starten: GitHub → Actions → „App Store Upload“ → Run workflow.
 #
 # Braucht drei Secrets im Repository (Settings → Secrets and variables → Actions):
 #   ASC_KEY_ID      Key ID des App-Store-Connect-API-Schlüssels (10 Zeichen)
 #   ASC_ISSUER_ID   Issuer ID (UUID) aus App Store Connect → Benutzer und Zugriff → Integrationen
 #   ASC_KEY_P8      Inhalt der heruntergeladenen .p8-Datei (kompletter Text inkl. BEGIN/END-Zeilen)
-# Der Schlüssel braucht die Rolle "App Manager" oder "Admin". Zertifikat und Profil legt Xcode damit
-# selbst an (Cloud-Signierung); nichts davon liegt im Repository.
+#
+# Signiert wird mit fastlane (fastlane/Fastfile): Jeder Lauf erzeugt ein Verteilungszertifikat nur für
+# sich und widerruft es am Ende wieder. Im Repository liegen weder Zertifikate noch Profile.
 name: App Store Upload
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: release
@@ -18,81 +22,68 @@ concurrency:
 
 jobs:
   upload:
-    name: Archiv bauen und hochladen
+    name: Bauen, signieren, hochladen
     runs-on: macos-26
-    timeout-minutes: 90
-    env:
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    # Großzügig, weil der Lauf auf Apples Verarbeitung wartet, bevor er das Zertifikat widerruft.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
       - name: Secrets prüfen
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
-          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "${{ secrets.ASC_KEY_P8 }}" ]; then
-            echo "::error::Es fehlen ASC_KEY_ID, ASC_ISSUER_ID oder ASC_KEY_P8 in den Repository-Secrets."
-            exit 1
-          fi
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "$(printf '%s' "${!name}" | tr -d '[:space:]')" ]; then
+              echo "::error::Das GitHub Secret $name fehlt (README.md, Abschnitt „Veröffentlichen“)."
+              exit 1
+            fi
+          done
+          echo "Alle drei Secrets sind vorhanden."
 
-      - name: Werkzeuge installieren
-        run: brew install xcodegen xcbeautify
+      - name: Xcode-Version
+        run: xcodebuild -version
+
+      - name: Ruby und fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: XcodeGen installieren
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        run: brew install xcodegen
 
       - name: Xcode-Projekt aus project.yml erzeugen
         run: xcodegen generate
 
-      - name: API-Schlüssel ablegen
+      - name: Bauen, signieren und zu TestFlight hochladen
         env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: |
-          mkdir -p "$HOME/private_keys"
-          printf '%s\n' "$ASC_KEY_P8" > "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
-          chmod 600 "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+          FASTLANE_SKIP_DOCS: "1"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "4"
+        run: bundle exec fastlane ios beta
 
-      - name: Build-Nummer festlegen
-        # Muss bei jedem Upload größer sein als zuvor. Die Expo-Builds gingen bis 6; ab hier 100 + Laufnummer.
-        run: echo "BUILD_NUMBER=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
-
-      - name: Archiv bauen (signiert)
-        run: |
-          set -o pipefail
-          mkdir -p build
-          xcodebuild archive \
-            -project Hachibu.xcodeproj \
-            -scheme Hachibu \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            -archivePath build/Hachibu.xcarchive \
-            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            2>&1 | tee build/archive.log | xcbeautify --renderer github-actions
-
-      - name: Zu App Store Connect hochladen
-        run: |
-          set -o pipefail
-          mkdir -p build
-          xcodebuild -exportArchive \
-            -archivePath build/Hachibu.xcarchive \
-            -exportOptionsPlist ci/ExportOptions.plist \
-            -exportPath build/export \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            2>&1 | tee build/export.log | xcbeautify --renderer github-actions
-          echo "Hochgeladen: Version $(grep -m1 MARKETING_VERSION project.yml | sed 's/.*: //'), Build $BUILD_NUMBER"
-
-      - name: Schlüssel löschen
+      - name: Signierdateien löschen
         if: always()
-        run: rm -rf "$HOME/private_keys"
+        run: rm -rf build/signing
 
-      - name: Protokolle hochladen
-        if: always()
+      - name: Protokolle sichern (nur bei Fehler)
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: release-logs
-          path: build/*.log
+          name: release-protokolle
+          path: |
+            ~/Library/Logs/gym
+            fastlane/report.xml
           if-no-files-found: ignore
           retention-days: 14

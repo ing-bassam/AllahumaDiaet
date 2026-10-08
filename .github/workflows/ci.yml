@@ -13,6 +13,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  fastlane:
+    name: fastlane-Datei prüfen (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - name: Syntax von Fastfile und Appfile prüfen
+        run: ruby -c fastlane/Fastfile && ruby -c fastlane/Appfile
+
   test:
     name: Simulator-Build und Tests
     runs-on: macos-26

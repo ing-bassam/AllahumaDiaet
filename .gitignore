@@ -24,3 +24,9 @@ Thumbs.db
 # Reste der früheren React-Native-Version (falls lokal noch vorhanden)
 node_modules/
 .expo/
+
+# fastlane (Upload-Lauf)
+fastlane/report.xml
+fastlane/README.md
+*.ipa
+*.dSYM.zip
