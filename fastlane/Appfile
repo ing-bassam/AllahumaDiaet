@@ -1,0 +1,4 @@
+# Grunddaten für fastlane. Der Zugang kommt aus dem App-Store-Connect-API-Schlüssel
+# (GitHub Secrets), deshalb stehen hier keine Apple-ID und kein Passwort.
+app_identifier("com.abdelkarim.hachibu")
+team_id("93FH42C5BX")

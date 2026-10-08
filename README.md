@@ -31,16 +31,27 @@ Die Projektdatei `Hachibu.xcodeproj` wird nicht eingecheckt, sondern auf dem Run
 
 Einmalig drei Secrets im Repository anlegen (*Settings → Secrets and variables → Actions → New repository secret*):
 
-1. In [App Store Connect](https://appstoreconnect.apple.com) → *Benutzer und Zugriff → Integrationen → App-Store-Connect-API → Teamschlüssel* einen Schlüssel erzeugen: Name z. B. „GitHub Actions“, Zugriff **App Manager**.
+1. In [App Store Connect](https://appstoreconnect.apple.com/access/integrations/api) → *Benutzer und Zugriff → Integrationen → App-Store-Connect-API → Teamschlüssel* einen Schlüssel erzeugen: Name z. B. „GitHub Actions“, Zugriff **Admin** (nötig, weil der Upload Zertifikate anlegt und widerruft).
 2. Die **Key ID** (10 Zeichen) als `ASC_KEY_ID`, die **Issuer ID** (über der Tabelle) als `ASC_ISSUER_ID` eintragen.
 3. Die `.p8`-Datei herunterladen (geht nur einmal) und ihren kompletten Inhalt – inklusive der Zeilen `-----BEGIN PRIVATE KEY-----` und `-----END PRIVATE KEY-----` – als `ASC_KEY_P8` eintragen. Die Datei danach sicher aufbewahren oder löschen. **Niemals ins Repository legen.**
 
-Dann: *Actions → „App Store Upload“ → Run workflow* (Branch `main`). Zertifikat und Provisioning-Profil legt Xcode mit dem Schlüssel selbst an (Cloud-Signierung); nichts davon liegt im Repository. Nach etwa 15 bis 25 Minuten erscheint der Build in App Store Connect unter *TestFlight* und kann einer Version zugeordnet werden.
+### Einmalig im Apple-Entwicklerportal
+
+Das Widget teilt seine Daten mit der App über eine **App Group**. Die lässt sich nicht über die Schnittstelle anlegen, deshalb einmal von Hand unter https://developer.apple.com/account/resources/identifiers/list:
+
+1. **App Group anlegen:** Neben „Identifiers“ auf das blaue **„+“** → **„App Groups“** → Continue → Description `Hachibu`, Identifier `group.com.abdelkarim.hachibu` → Continue → Register.
+2. **Bundle-IDs zuordnen:** Für `com.abdelkarim.hachibu` und `com.abdelkarim.hachibu.widget` jeweils: in der Liste anklicken → neben **„App Groups“** auf **„Configure“** bzw. **„Edit“** → Häkchen bei `group.com.abdelkarim.hachibu` → Continue → oben rechts **„Save“** (einen Hinweis zu Profilen mit „Confirm“ bestätigen).
+
+Fehlt die Widget-ID noch in der Liste, legt sie der erste Upload-Lauf selbst an und schaltet „App Groups“ ein; danach Schritt 2 für sie nachholen und den Upload erneut starten. Fehlt die Zuordnung, bricht der Upload mit einem deutschen Hinweis ab, bevor etwas hochgeladen wird.
+
+### Hochladen
+
+*Actions → „App Store Upload“ → Run workflow* (Branch `main`). [fastlane](https://fastlane.tools) (`fastlane/Fastfile`) erzeugt dabei ein Verteilungszertifikat und App-Store-Profile **nur für diesen Lauf**, signiert, lädt hoch, wartet, bis Apple den Build verarbeitet hat, und widerruft das Zertifikat danach wieder. So liegt nirgends ein dauerhaftes Zertifikat, auch nicht verschlüsselt. Apps im App Store und Builds in TestFlight bleiben davon unberührt, weil Apple sie selbst neu signiert. Ein Lauf dauert etwa 20 bis 45 Minuten; danach steht der Build in App Store Connect unter *TestFlight* und kann einer Version zugeordnet werden.
 
 ### Versionen
 
 - **Sichtbare Version** (`2.0.0`): `MARKETING_VERSION` in `project.yml`, für jedes Update von Hand erhöhen.
-- **Build-Nummer**: setzt der Upload-Workflow automatisch auf `100 + Laufnummer`, damit sie bei jedem Upload größer ist als zuvor (die Expo-Builds gingen bis 6). Nicht von Hand eintragen.
+- **Build-Nummer**: setzt der Upload automatisch auf die letzte Nummer in App Store Connect plus 1, mindestens 100 (die Expo-Builds gingen bis 6). Nicht von Hand eintragen.
 
 Alles außerhalb des Codes (Screenshots, Store-Texte, Datenschutzangaben, Altersfreigabe, Prüfnotizen) steht in [`docs/app-store-connect.md`](docs/app-store-connect.md).
 
@@ -58,7 +69,7 @@ Alles außerhalb des Codes (Screenshots, Store-Texte, Datenschutzangaben, Alters
 | `Shared` | Code für App **und** Widget: Kalorienring, Zahlenformat, Tages-Schnappschuss |
 | `HachibuWidget` | Widget-Erweiterung (liest nur die Schnappschuss-Datei, nie die Datenbank) |
 | `HachibuTests` | Tests mit Swift Testing: Rechenlogik, Barcodes, API-Parsing, Datum, Migrationen, Sicherung |
-| `ci` | `ExportOptions.plist` für den Upload |
+| `fastlane`, `Gemfile` | Signieren und Hochladen im Upload-Workflow |
 | `docs` | Datenschutz, Impressum, Support (GitHub Pages) und die App-Store-Connect-Checkliste |
 | `assets/source` | Vorlagen der Marke: `icon.png` (Zeichen „H.“ auf Creme `#F7F6F3`) und `wordmark.png` |
 

@@ -1,0 +1,269 @@
+# fastlane-Konfiguration für Hachibu
+# ==================================
+# Läuft nur in GitHub Actions (Workflow „App Store Upload“, .github/workflows/release.yml) auf einem
+# Mac in der Cloud. Alle Zugangsdaten kommen aus Umgebungsvariablen, die der Workflow aus den GitHub
+# Secrets setzt. In dieser Datei steht kein Geheimnis.
+#
+# Warum ein Zertifikat nur für diesen Lauf?
+#   Das Repository ist öffentlich. Ein dauerhaftes Signier-Zertifikat müsste irgendwo gespeichert
+#   werden. Stattdessen erzeugt jeder Lauf ein neues Verteilungszertifikat, signiert damit, wartet
+#   bis Apple den Build verarbeitet hat, und widerruft das Zertifikat danach wieder. Apps im App Store
+#   und Builds in TestFlight sind davon nicht betroffen, weil Apple sie selbst neu signiert.
+#
+# Ablauf der Lane „beta“:
+#   1. API-Schlüssel laden
+#   2. Bundle-IDs prüfen: fehlende anlegen, „App Groups“ einschalten
+#   3. Build-Nummer bestimmen (letzte in App Store Connect + 1, mindestens 100)
+#   4. Zertifikat und App-Store-Profile nur für diesen Lauf erzeugen
+#   5. Prüfen, ob die Profile die App Group enthalten (sonst verständlicher Hinweis)
+#   6. Archivieren, als IPA exportieren, zu TestFlight hochladen, auf Apples Verarbeitung warten
+#   7. Immer, auch bei Fehlern: Profile löschen und Zertifikat widerrufen
+
+opt_out_usage
+default_platform(:ios)
+
+APP_ID = "com.abdelkarim.hachibu"
+APP_GROUP = "group.com.abdelkarim.hachibu"
+TEAM_ID = "93FH42C5BX"
+XCODE_PROJECT = "Hachibu.xcodeproj"
+# Xcode-Target => Bundle-ID. Jede Bundle-ID braucht ein eigenes App-Store-Profil.
+SIGNING_TARGETS = {
+  "Hachibu" => APP_ID,
+  "HachibuWidget" => "#{APP_ID}.widget"
+}.freeze
+BUNDLE_NAMES = { APP_ID => "Hachibu", "#{APP_ID}.widget" => "Hachibu Widget" }.freeze
+# Die Builds der Expo-Version gingen bis 6; ab Version 2.0 beginnt die Zählung bei 100.
+MIN_BUILD = 100
+ANLEITUNG = "README.md, Abschnitt „Einmalig im Apple-Entwicklerportal“"
+
+platform :ios do
+  desc "Baut Hachibu, signiert die App und lädt sie zu TestFlight hoch"
+  lane :beta do
+    setup_ci
+
+    api_key = lade_api_schluessel
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: api_key)
+    bundle_ids_vorbereiten
+    build_number = naechste_build_nummer(api_key)
+    version = marketing_version
+
+    vorhandene_zertifikate = Spaceship::ConnectAPI::Certificate.all.map(&:id)
+    zertifikat_id = nil
+    profilnamen = []
+    lauf = ENV["GITHUB_RUN_ID"].to_s.empty? ? Time.now.to_i.to_s : ENV["GITHUB_RUN_ID"]
+
+    # Ruby-Code im Fastfile läuft im Ordner fastlane/, Aktionen dagegen im Projektordner.
+    FileUtils.mkdir_p(File.expand_path("../build/signing", __dir__))
+
+    begin
+      get_certificates(
+        api_key: api_key,
+        development: false,
+        generate_apple_certs: true,
+        keychain_path: keychain_pfad,
+        keychain_password: "",
+        output_path: "build/signing"
+      )
+      zertifikat_id = lane_context[SharedValues::CERT_CERTIFICATE_ID]
+      UI.success("Verteilungszertifikat für diesen Lauf: #{zertifikat_id}")
+
+      profile = {}
+      SIGNING_TARGETS.each_value do |bundle_id|
+        name = "Hachibu CI #{bundle_id} #{lauf}"
+        profilnamen << name
+        get_provisioning_profile(
+          api_key: api_key,
+          app_identifier: bundle_id,
+          cert_id: zertifikat_id,
+          provisioning_name: name,
+          # Nie vorhandene Profile anfassen, immer ein neues nur für diesen Lauf erzeugen.
+          skip_fetch_profiles: true,
+          skip_certificate_verification: true,
+          output_path: "build/signing"
+        )
+        profile[bundle_id] = name
+        pruefe_app_group(lane_context[SharedValues::SIGH_PROFILE_PATH], bundle_id)
+      end
+
+      # Das Projekt nutzt lokal automatische Signierung; für den Release-Build auf diese Profile umstellen.
+      SIGNING_TARGETS.each do |target, bundle_id|
+        update_code_signing_settings(
+          path: XCODE_PROJECT,
+          use_automatic_signing: false,
+          targets: [target],
+          build_configurations: ["Release"],
+          team_id: TEAM_ID,
+          code_sign_identity: "Apple Distribution",
+          bundle_identifier: bundle_id,
+          profile_name: profile[bundle_id]
+        )
+      end
+
+      build_app(
+        project: XCODE_PROJECT,
+        scheme: "Hachibu",
+        configuration: "Release",
+        export_method: "app-store",
+        export_team_id: TEAM_ID,
+        export_options: {
+          signingStyle: "manual",
+          provisioningProfiles: profile
+        },
+        xcargs: "CURRENT_PROJECT_VERSION=#{build_number} MARKETING_VERSION=#{version} DEVELOPMENT_TEAM=#{TEAM_ID}",
+        output_directory: "build",
+        output_name: "Hachibu.ipa",
+        clean: true
+      )
+
+      # Bewusst auf Apples Verarbeitung warten: Erst danach wird das Zertifikat widerrufen.
+      upload_to_testflight(
+        api_key: api_key,
+        skip_waiting_for_build_processing: false,
+        distribute_external: false,
+        notify_external_testers: false,
+        wait_processing_timeout_duration: 3600
+      )
+
+      melde_erfolg(version, build_number)
+    ensure
+      aufraeumen(zertifikat_id, vorhandene_zertifikate, profilnamen)
+    end
+  end
+end
+
+# --- Hilfsfunktionen ---------------------------------------------------------------------------
+
+def pflicht_env(name)
+  wert = ENV[name].to_s.strip
+  UI.user_error!("Das GitHub Secret #{name} fehlt (README.md, Abschnitt „Veröffentlichen“).") if wert.empty?
+  wert
+end
+
+def lade_api_schluessel
+  app_store_connect_api_key(
+    key_id: pflicht_env("ASC_KEY_ID"),
+    issuer_id: pflicht_env("ASC_ISSUER_ID"),
+    key_content: schluessel_als_pem(pflicht_env("ASC_KEY_P8")),
+    is_key_content_base64: false,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+# Bringt den API-Schlüssel in das vollständige PEM-Format der .p8-Datei. Akzeptiert den kompletten
+# Text der Datei, nur die Zeilen zwischen BEGIN und END oder die Base64-kodierte Datei.
+def schluessel_als_pem(inhalt)
+  require "openssl"
+  text = inhalt.delete("\r").strip
+  pem =
+    if text.include?("PRIVATE KEY")
+      text
+    else
+      kompakt = text.gsub(/\s+/, "")
+      dekodiert = kompakt.unpack1("m")
+      if dekodiert.include?("PRIVATE KEY")
+        dekodiert.delete("\r").strip
+      else
+        "-----BEGIN PRIVATE KEY-----\n#{kompakt.scan(/.{1,64}/).join("\n")}\n-----END PRIVATE KEY-----"
+      end
+    end
+  pem = "#{pem.strip}\n"
+  begin
+    OpenSSL::PKey.read(pem)
+  rescue OpenSSL::PKey::PKeyError, ArgumentError
+    UI.user_error!("Das GitHub Secret ASC_KEY_P8 enthält keinen gültigen API-Schlüssel. Bitte den kompletten " \
+                   "Text der Datei AuthKey_….p8 eintragen.")
+  end
+  pem
+end
+
+def keychain_pfad
+  File.expand_path("~/Library/Keychains/#{ENV['MATCH_KEYCHAIN_NAME'] || 'fastlane_tmp_keychain'}-db")
+end
+
+# Legt fehlende Bundle-IDs an und schaltet „App Groups“ ein. Die App Group selbst und ihre Zuordnung
+# lassen sich über die Schnittstelle nicht einrichten; das prüft pruefe_app_group später am Profil.
+def bundle_ids_vorbereiten
+  SIGNING_TARGETS.each_value do |bundle_id|
+    eintrag = Spaceship::ConnectAPI::BundleId.find(bundle_id)
+    if eintrag.nil?
+      UI.important("Bundle-ID #{bundle_id} fehlt im Apple-Entwicklerportal und wird angelegt.")
+      eintrag = Spaceship::ConnectAPI::BundleId.create(name: BUNDLE_NAMES[bundle_id], identifier: bundle_id,
+                                                         platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS)
+    end
+    typen = eintrag.get_capabilities.map { |c| c.capability_type.to_s }
+    next if typen.include?("APP_GROUPS")
+
+    UI.important("Bei #{bundle_id} wird „App Groups“ eingeschaltet.")
+    eintrag.create_capability(Spaceship::ConnectAPI::BundleIdCapability::Type::APP_GROUPS)
+  end
+  UI.success("Bundle-IDs geprüft: #{SIGNING_TARGETS.values.join(', ')}")
+rescue FastlaneCore::Interface::FastlaneError
+  raise
+rescue StandardError => e
+  UI.user_error!("Die Bundle-IDs konnten nicht vorbereitet werden (#{e.class}: #{e.message}). " \
+                 "Bitte im Apple-Entwicklerportal prüfen (#{ANLEITUNG}).")
+end
+
+def pruefe_app_group(pfad, bundle_id)
+  rechte = FastlaneCore::ProvisioningProfile.parse(pfad)["Entitlements"] || {}
+  gruppen = Array(rechte["com.apple.security.application-groups"])
+  return if gruppen.include?(APP_GROUP)
+
+  UI.user_error!("Im Apple-Entwicklerportal ist der Bundle-ID #{bundle_id} die App Group #{APP_GROUP} noch " \
+                 "nicht zugeordnet (gefunden: #{gruppen.empty? ? 'keine' : gruppen.join(', ')}). " \
+                 "Bitte anlegen bzw. zuordnen (#{ANLEITUNG}) und den Workflow erneut starten.")
+end
+
+# Letzte Build-Nummer in App Store Connect + 1, mindestens MIN_BUILD.
+def naechste_build_nummer(api_key)
+  letzte = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0)
+  naechste = [letzte.to_s.split(".").first.to_i + 1, MIN_BUILD].max
+  UI.success("Build-Nummer für diesen Upload: #{naechste}")
+  naechste
+end
+
+def marketing_version
+  version = File.read(File.expand_path("../project.yml", __dir__))[/MARKETING_VERSION:\s*"?([0-9][0-9.]*)"?/, 1]
+  UI.user_error!("MARKETING_VERSION in project.yml nicht gefunden.") if version.to_s.empty?
+  version
+end
+
+# Löscht die Profile dieses Laufs und widerruft das Zertifikat dieses Laufs. Zertifikate, die schon vor
+# dem Lauf existierten (z. B. von anderen Apps), werden nie angefasst.
+def aufraeumen(zertifikat_id, vorhandene_zertifikate, profilnamen)
+  profilnamen.each do |name|
+    Spaceship::ConnectAPI::Profile.all(filter: { name: name }).each do |profil|
+      profil.delete!
+      UI.message("Profil gelöscht: #{name}")
+    end
+  rescue StandardError => e
+    UI.important("Profil #{name} konnte nicht gelöscht werden (#{e.message}). Bitte im Portal entfernen.")
+  end
+
+  return if zertifikat_id.nil?
+  if vorhandene_zertifikate.include?(zertifikat_id)
+    UI.message("Zertifikat #{zertifikat_id} gab es schon vorher, es bleibt unverändert.")
+    return
+  end
+  begin
+    zertifikat = Spaceship::ConnectAPI::Certificate.all.find { |c| c.id == zertifikat_id }
+    zertifikat&.delete!
+    UI.success("Zertifikat dieses Laufs widerrufen: #{zertifikat_id}")
+  rescue StandardError => e
+    UI.important("Zertifikat #{zertifikat_id} konnte nicht widerrufen werden (#{e.message}). " \
+                 "Bitte im Apple-Entwicklerportal unter „Certificates“ von Hand widerrufen.")
+  end
+end
+
+def melde_erfolg(version, build_number)
+  UI.success("Hachibu #{version} (Build #{build_number}) ist in TestFlight.")
+  datei = ENV["GITHUB_STEP_SUMMARY"].to_s
+  return if datei.empty?
+
+  File.open(datei, "a") do |f|
+    f.puts "### Hachibu #{version} (Build #{build_number}) ist in TestFlight"
+    f.puts
+    f.puts "Apple hat den Build verarbeitet. Er erscheint in App Store Connect unter TestFlight und in der TestFlight-App."
+  end
+end
