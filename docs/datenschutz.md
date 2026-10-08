@@ -4,9 +4,9 @@ title: Datenschutzerklärung – Hachibu
 
 # Datenschutzerklärung
 
-Stand: 27.09.2026
+Stand: 08.10.2026
 
-Diese Datenschutzerklärung gilt für die App **Hachibu** für iOS und Android sowie für diese Webseite.
+Diese Datenschutzerklärung gilt für die App **Hachibu** für iOS sowie für diese Webseite. Eine Android-Version gibt es nicht.
 
 ## 1. Verantwortlicher
 
@@ -28,27 +28,31 @@ Ein Datenschutzbeauftragter ist nicht benannt. Nach Art. 37 DSGVO und § 38 BDSG
 
 Die App speichert folgende Angaben in einer lokalen Datenbank auf deinem Gerät:
 
-- Profil: Alter, Geschlecht, Größe, aktuelles Gewicht, Zielgewicht, Aktivitätslevel, berechnetes Kalorienziel und Makroverteilung
-- Tagebuch: gegessene Produkte mit Menge, Mahlzeit, Datum, Uhrzeit und den Nährwerten zum Zeitpunkt des Eintrags
-- Produkte und eigene Lebensmittel: Name, Marke, Nährwerte, ggf. Bild-Adresse und ob du die Werte selbst korrigiert hast
+- Profil: Alter, Geschlecht, Größe, aktuelles Gewicht, Zielgewicht, Aktivitätslevel, berechnetes oder selbst gewähltes Kalorienziel und Makroverteilung
+- Tagebuch: gegessene Produkte mit Menge, Mahlzeit, Datum, Uhrzeit und den Nährwerten zum Zeitpunkt des Eintrags; bei Schnelleinträgen zusätzlich eine freiwillige Bezeichnung
+- Produkte und eigene Lebensmittel: Name, Marke, Nährwerte, ggf. Bild-Adresse, ob du die Werte selbst korrigiert hast und ob das Lebensmittel ein Favorit ist
+- Gewichtsverlauf: Gewicht je Datum, sofern du es einträgst
 
-Die Vorschläge „Zuletzt verwendet“ und „Häufig gegessen“ in der Suche werden aus diesem Tagebuch auf dem Gerät berechnet. Die lokale Suche verlässt dein Gerät nicht.
+Die Vorschläge „Zuletzt verwendet“, „Häufig gegessen“ und „Favoriten“ in der Suche sowie die Wochenübersicht und der Gewichtsverlauf werden aus diesen Daten auf dem Gerät berechnet. Die lokale Suche verlässt dein Gerät nicht.
+
+**Widget:** Damit das Widget auf dem Homescreen oder Sperrbildschirm den Tagesstand anzeigen kann, legt die App eine Kurzfassung des heutigen Tages (verzehrte Kalorien und Makros, Tagesziel, Anzahl der Einträge) in einem geschützten Ordner auf deinem Gerät ab, den nur die App und ihr Widget lesen können. Auch diese Datei verlässt dein Gerät nicht.
 
 Diese Daten verlassen dein Gerät nicht durch die App und werden nicht an mich oder Dritte übermittelt. Da Gewicht und Ernährungsangaben Gesundheitsdaten im Sinne von Art. 9 DSGVO sein können, verarbeitet die App sie ausschließlich lokal.
 
-**Speicherdauer:** Die Daten bleiben so lange auf deinem Gerät, bis du sie selbst löschst – über „Info & Rechtliches → Alle Daten löschen“ oder durch Deinstallieren der App. Eine automatische Löschfrist gibt es nicht, weil ein Tagebuch nur dann nützlich ist, wenn es dauerhaft erhalten bleibt.
+**Speicherdauer:** Die Daten bleiben so lange auf deinem Gerät, bis du sie selbst löschst – über „Mehr → Alle Daten löschen“ (in Version 1.0: „Info & Rechtliches → Alle Daten löschen“) oder durch Deinstallieren der App. Eine automatische Löschfrist gibt es nicht, weil ein Tagebuch nur dann nützlich ist, wenn es dauerhaft erhalten bleibt.
 
 Das Speichern auf deinem Gerät ist für die von dir gewünschte Funktion unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).
 <!-- TODO (rechtliche Prüfung): Da der Anbieter keinen Zugriff hat, ist fraglich, ob überhaupt eine Verarbeitung durch den Verantwortlichen im Sinne der DSGVO vorliegt. Die Erklärung beschreibt die lokale Speicherung deshalb vorsorglich, ohne eine DSGVO-Rechtsgrundlage für sich zu behaupten. -->
 
+## 3a. Datensicherung auf Wunsch (ab Version 2.0)
+
+Unter „Mehr → Daten sichern & wiederherstellen“ kannst du eine Sicherungsdatei erstellen. Sie enthält dein Profil, alle Lebensmittel, das Tagebuch und den Gewichtsverlauf – also auch Gesundheitsdaten. Die App legt die Datei zunächst nur auf deinem Gerät ab und öffnet das Teilen-Menü von iOS. **Wohin die Datei geht, entscheidest allein du**: zum Beispiel in die App „Dateien“, per AirDrop auf ein anderes Gerät oder in einen Cloud-Speicher deiner Wahl. Die App selbst lädt nichts hoch, und ich erhalte keine Kopie. Für den Dienst, den du zum Ablegen wählst, gelten dessen Datenschutzbestimmungen.
+
+Dasselbe gilt für den Export des Tagebuchs als CSV-Datei (z. B. für Excel). Beim Einlesen einer Sicherung werden die Daten auf diesem Gerät durch den Inhalt der Datei ersetzt; die App fragt vorher nach.
+
 ## 4. Kamera
 
-Für das Scannen fragt die App nach der Kamera-Berechtigung. Das Kamerabild wird nur live auf deinem Gerät ausgewertet, um einen Barcode zu erkennen. Es werden **keine Fotos oder Videos gespeichert oder übertragen**. Die Berechtigung kannst du jederzeit in den Einstellungen deines Geräts entziehen; Barcodes lassen sich dann weiterhin von Hand eingeben.
-
-- **iOS:** Die Erkennung erfolgt mit den Systemfunktionen von Apple direkt auf dem Gerät.
-- **Android:** Die Erkennung nutzt die Bibliothek Google ML Kit der Google Ireland Limited. Das Kamerabild wird auch hier nur auf dem Gerät ausgewertet. ML Kit sendet jedoch technische Diagnosedaten an Google: Geräteinformationen (Hersteller, Modell, Betriebssystemversion), App-Informationen (Paketname, Version), Leistungswerte sowie Ereignis- und Fehlercodes. Nach Angaben von Google dienen sie der Diagnose und Nutzungsanalyse und werden nicht an Dritte weitergegeben ([Angaben von Google](https://developers.google.com/ml-kit/android-data-disclosure)).
-  Rechtsgrundlage für diese technisch notwendige Diagnose ist Art. 6 Abs. 1 lit. f DSGVO; das berechtigte Interesse liegt in einer funktionierenden und fehlerfreien Barcode-Erkennung. Die iOS-Version ist davon nicht betroffen.
-  <!-- TODO (rechtliche Prüfung): Rolle von Google (eigener Verantwortlicher oder gemeinsam Verantwortliche) einordnen lassen, bevor die App bei Google Play erscheint. -->
+Für das Scannen fragt die App nach der Kamera-Berechtigung. Das Kamerabild wird nur live auf deinem Gerät ausgewertet, um einen Barcode zu erkennen. Es werden **keine Fotos oder Videos gespeichert oder übertragen**. Die Erkennung erfolgt mit den Systemfunktionen von Apple (AVFoundation) direkt auf dem Gerät. Die Berechtigung kannst du jederzeit in den Einstellungen deines Geräts entziehen; Barcodes lassen sich dann weiterhin von Hand eingeben.
 
 ## 5. Produktabfrage bei Open Food Facts
 
@@ -85,16 +89,16 @@ Hat ein Produkt bei Open Food Facts ein Bild, lädt die App es von den Servern v
 
 ## 7. Kein Tracking, keine Weitergabe
 
-Die App enthält keine Werbung, keine Analyse- oder Tracking-Werkzeuge und kein Crash-Reporting. Ich gebe keine Daten an Dritte weiter und verkaufe keine Daten. Ausnahmen sind nur die in den Abschnitten 4 bis 6 beschriebenen Übermittlungen, die technisch für das Scannen, die Produktabfrage und die Online-Suche nötig sind.
+Die App enthält keine Werbung, keine Analyse- oder Tracking-Werkzeuge und kein Crash-Reporting. Ich gebe keine Daten an Dritte weiter und verkaufe keine Daten. Ausnahmen sind nur die in den Abschnitten 5 bis 6 beschriebenen Übermittlungen an Open Food Facts, die technisch für die Produktabfrage, die Online-Suche und die Produktbilder nötig sind, sowie die Sicherungsdatei, die du selbst weitergibst (Abschnitt 3a).
 
 ## 8. Geräte-Backups
 
-Die App selbst synchronisiert nichts. Je nach Einstellungen deines Geräts können die App-Daten aber in Backups des Betriebssystems enthalten sein, zum Beispiel im **iCloud-Backup** (Apple) oder in der **Android-Datensicherung** (Google). Diese Backups richtest du selbst ein; sie unterliegen den Bedingungen von Apple bzw. Google. Ich habe darauf keinen Zugriff.
+Die App selbst synchronisiert nichts. Je nach Einstellungen deines Geräts können die App-Daten aber im **iCloud-Backup** von Apple enthalten sein. Dieses Backup richtest du selbst ein; es unterliegt den Bedingungen von Apple. Ich habe darauf keinen Zugriff.
 Backups sind bewusst nicht ausgeschlossen: Andernfalls wäre dein Tagebuch beim Wechsel auf ein neues Gerät verloren, da die App keine eigene Cloud nutzt.
 
 ## 9. Daten löschen
 
-Du kannst alle Daten jederzeit in der App unter **Info & Rechtliches → Alle Daten löschen** entfernen. Auch das Deinstallieren der App löscht die lokal gespeicherten Daten. Kopien in Geräte-Backups (Abschnitt 8) werden erst entfernt, wenn du das jeweilige Backup löschst oder es überschrieben wird.
+Du kannst alle Daten jederzeit in der App unter **Mehr → Alle Daten löschen** (in Version 1.0: **Info & Rechtliches → Alle Daten löschen**) entfernen; dabei wird auch die Datei für das Widget gelöscht. Auch das Deinstallieren der App löscht die lokal gespeicherten Daten. Kopien in Geräte-Backups (Abschnitt 8) und Sicherungsdateien, die du selbst abgelegt hast (Abschnitt 3a), werden erst entfernt, wenn du sie dort löschst.
 
 ## 10. Kontakt per E-Mail
 
@@ -109,13 +113,14 @@ Dabei können Daten in die USA übermittelt werden. GitHub ist nach eigenen Anga
 
 ## 11a. Empfänger deiner Daten
 
-Ich selbst erhalte keine Daten aus der App. Übermittelt wird nur an die in den Abschnitten 4 bis 6 und 11 genannten Stellen:
+Ich selbst erhalte keine Daten aus der App. Übermittelt wird nur an die in den Abschnitten 5, 6 und 11 genannten Stellen:
 
 | Empfänger | Wofür | Sitz |
 | --- | --- | --- |
 | Open Food Facts | Produktabfrage, Online-Suche, Produktbilder | Frankreich (EU) |
-| Google Ireland Limited (ML Kit) | Diagnosedaten der Barcode-Erkennung, nur Android | Irland (EU), Konzern mit Sitz in den USA |
 | GitHub, Inc. | Auslieferung dieser Webseite | USA, EU-US Data Privacy Framework |
+
+Empfänger einer Sicherungsdatei (Abschnitt 3a) wählst du selbst; sie gehören nicht zu dieser Liste.
 
 Eine Weitergabe zu Werbe- oder Analysezwecken findet nicht statt.
 
@@ -138,7 +143,7 @@ Du hast nach der DSGVO das Recht auf
 - Datenübertragbarkeit (Art. 20) und
 - Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21).
 
-Da die App-Daten nur auf deinem Gerät liegen, kannst du sie dort selbst einsehen, ändern und löschen. Für Daten bei Open Food Facts wende dich an Open Food Facts (privacy@openfoodfacts.org). Für alle anderen Anliegen genügt eine E-Mail an die oben genannte Adresse.
+Da die App-Daten nur auf deinem Gerät liegen, kannst du sie dort selbst einsehen, ändern und löschen; die Sicherungsdatei (Abschnitt 3a) ist zugleich eine vollständige Kopie deiner Daten in einem gängigen Format. Für Daten bei Open Food Facts wende dich an Open Food Facts (privacy@openfoodfacts.org). Für alle anderen Anliegen genügt eine E-Mail an die oben genannte Adresse.
 
 ## 13. Beschwerderecht
 

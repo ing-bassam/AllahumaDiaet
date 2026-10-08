@@ -24,13 +24,22 @@ Tippe im Scanner auf *Nummer eintippen* und gib die Ziffern unter dem Barcode ei
 Beim Eintragen auf *Nährwerte korrigieren* tippen. Die Korrektur gilt ab dann für dieses Produkt; bereits eingetragene Tage bleiben unverändert. Einzelne Einträge lassen sich auf dem Startbildschirm durch Antippen bearbeiten.
 
 **Wie lösche ich meine Daten?**
-In der App unter *Info & Rechtliches → Alle Daten löschen*. Alternativ die App deinstallieren.
+In der App unter *Mehr → Alle Daten löschen* (in Version 1.0: *Info & Rechtliches → Alle Daten löschen*). Alternativ die App deinstallieren.
+
+**Wie sichere ich meine Daten oder nehme sie auf ein neues iPhone mit?**
+Unter *Mehr → Daten sichern & wiederherstellen* erstellst du eine Sicherungsdatei. Sie erscheint im Teilen-Menü von iOS; du entscheidest selbst, ob sie in „Dateien“, per AirDrop oder anderswo landet. Auf dem neuen Gerät die Datei über *Sicherung einlesen* auswählen. Dort gibt es auch einen CSV-Export des Tagebuchs für Excel oder Numbers.
+
+**Wie richte ich das Widget ein?**
+Auf dem Homescreen lange auf eine freie Stelle drücken, oben auf „+“ (bzw. „Bearbeiten“ → „Widget hinzufügen“) tippen und „Hachibu“ wählen. Es gibt ein kleines und ein mittleres Widget sowie Varianten für den Sperrbildschirm. Das Widget zeigt die übrigen Kalorien des Tages; Tippen öffnet den Scanner.
+
+**Gibt es Hachibu für Android?**
+Nein. Seit Version 2.0 ist Hachibu eine reine iPhone-App.
 
 **Wie wird mein Kalorienziel berechnet?**
-Hachibu berechnet den Grundumsatz nach der Formel von Mifflin-St. Jeor und multipliziert ihn mit dem PAL-Faktor deines Aktivitätslevels nach den Referenzwerten der Deutschen Gesellschaft für Ernährung. Beim Abnehmen werden 500 kcal abgezogen, beim Zunehmen 300 kcal addiert; unter deinen Grundumsatz geht das berechnete Ziel nie. Im Profil kannst du stattdessen ein eigenes Tagesziel zwischen 1.200 und 5.000 kcal festlegen; liegt es unter deinem Grundumsatz, weist die App darauf hin. Makronährstoffe werden mit 4 kcal je Gramm Protein und Kohlenhydrate und 9 kcal je Gramm Fett umgerechnet. Den Rechenweg und alle Quellen findest du in der App unter *Info & Rechtliches → Berechnung & Quellen*. Die Werte sind Richtwerte für gesunde Erwachsene und ersetzen keine ärztliche oder ernährungsfachliche Beratung.
+Hachibu berechnet den Grundumsatz nach der Formel von Mifflin-St. Jeor und multipliziert ihn mit dem PAL-Faktor deines Aktivitätslevels nach den Referenzwerten der Deutschen Gesellschaft für Ernährung. Beim Abnehmen werden 500 kcal abgezogen, beim Zunehmen 300 kcal addiert; unter deinen Grundumsatz geht das berechnete Ziel nie. Im Profil kannst du stattdessen ein eigenes Tagesziel zwischen 1.200 und 5.000 kcal festlegen; liegt es unter deinem Grundumsatz, weist die App darauf hin. Makronährstoffe werden mit 4 kcal je Gramm Protein und Kohlenhydrate und 9 kcal je Gramm Fett umgerechnet. Den Rechenweg und alle Quellen findest du in der App unter *Mehr → Info & Rechtliches → Berechnung & Quellen*. Die Werte sind Richtwerte für gesunde Erwachsene und ersetzen keine ärztliche oder ernährungsfachliche Beratung.
 
-**Werden meine Daten gesichert oder synchronisiert?**
-Nein, es gibt kein Konto und keine Cloud. Deine Daten können aber in den Geräte-Backups deines Betriebssystems (z. B. iCloud-Backup) enthalten sein.
+**Werden meine Daten automatisch gesichert oder synchronisiert?**
+Nein, es gibt kein Konto und keine Cloud. Deine Daten können aber in den Geräte-Backups deines Betriebssystems (z. B. iCloud-Backup) enthalten sein. Eine eigene Sicherungsdatei erstellst du bewusst selbst, siehe oben.
 
 ---
 

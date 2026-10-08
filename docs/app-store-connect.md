@@ -5,6 +5,20 @@
 
 Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 
+## 0. Update auf Version 2.0 (SwiftUI, Oktober 2026)
+
+Version 1.0 (Build 6) ist seit 05.10.2026 im Store. Version 2.0 ist dieselbe App (gleiche Apple-ID, gleiche Bundle-ID, gleiche Datenbank), neu geschrieben in SwiftUI. Was für das Update in App Store Connect zu tun ist:
+
+- [ ] Build hochladen: GitHub → *Actions → „App Store Upload“ → Run workflow* (Secrets vorher anlegen, siehe README). Der Build erscheint in TestFlight; dort auf dem eigenen iPhone testen – besonders, ob das Tagebuch aus 1.0 erhalten bleibt.
+- [ ] *Apps → Hachibu → „+“ neben iOS-App* → Version `2.0.0` anlegen, den Build zuordnen.
+- [ ] **Neue Screenshots** (Abschnitt 8): Die Oberfläche sieht komplett anders aus, die alten Bilder passen nicht mehr. Mindestens: Tagebuch, Scanner, Eintragen, Suche, Verlauf, Widget auf dem Homescreen.
+- [ ] Text „Neue Funktionen in dieser Version“ (Abschnitt 10, Entwurf dort).
+- [ ] Beschreibung und Keywords prüfen (Abschnitt 10, aktualisiert um Widgets, Favoriten, Schnelleintrag, Verlauf, Datensicherung).
+- [ ] Datenschutzangaben (Abschnitt 4) bleiben inhaltlich gleich; die Datensicherung ist keine Erfassung, weil nur der Nutzer die Datei weitergibt. Datenschutzerklärung ist unter derselben URL aktualisiert (Stand 08.10.2026).
+- [ ] Altersfreigabe bleibt unverändert.
+- [ ] Prüfnotizen (Abschnitt 9) wurden an die neuen Tabs angepasst – beim Einreichen den aktuellen Text einfügen.
+- Android ist mit 2.0 endgültig vom Tisch (SwiftUI läuft nur auf Apple-Geräten); Abschnitt 12 entfällt.
+
 ## 1. Apple Developer Program
 
 - [x] Mitgliedschaft im [Apple Developer Program](https://developer.apple.com/programs/) ist bezahlt (deine Angabe, 17.09.2026).
@@ -17,12 +31,12 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 
 - [x] *Apps → + → Neue App* – angelegt am 26.09.2026, Apple-ID **6816385956**
   - Plattform: iOS
-  - Name (App-Store-Name, max. 30 Zeichen): **Hachibu – Kalorienzähler**, siehe *2a. Namensprüfung*. Auf dem Homescreen steht weiter **Hachibu** (`app.json` → `name`).
+  - Name (App-Store-Name, max. 30 Zeichen): **Hachibu – Kalorienzähler**, siehe *2a. Namensprüfung*. Auf dem Homescreen steht weiter **Hachibu** (`project.yml` → `CFBundleDisplayName`).
   - Primäre Sprache: Deutsch
-  - Bundle-ID: **com.abdelkarim.hachibu** (`app.json` → `ios.bundleIdentifier`; muss zuerst unter *Certificates, Identifiers & Profiles* existieren – `eas build` legt sie beim ersten Build an). **Nach dem ersten Upload nicht mehr änderbar**, siehe *2b. Bundle-ID*.
+  - Bundle-ID: **com.abdelkarim.hachibu** (`project.yml` → `PRODUCT_BUNDLE_IDENTIFIER`; existiert seit Version 1.0). **Nach dem ersten Upload nicht mehr änderbar**, siehe *2b. Bundle-ID*.
   - SKU: frei wählbar, z. B. `hachibu-ios`
   - Benutzerzugriff: Vollzugriff
-- [x] Apple-ID `6816385956` steht in `eas.json` bei `submit.production.ios.ascAppId`.
+- [x] Apple-ID `6816385956` steht in `Hachibu/App/AppInfo.swift` (`appStoreId`, für den Bewertungslink in der App).
 - [ ] Kategorie: **Gesundheit & Fitness** (primär). Sekundär optional, z. B. *Essen & Trinken*.
 - [ ] Copyright: `2026 Karim Abu Elkheir` <!-- TODO: bestätigen -->
 
@@ -39,8 +53,8 @@ Reihenfolge ungefähr so, wie die Schritte aufeinander aufbauen.
 ## 2b. Bundle-ID (Entscheidung, die bleibt)
 
 - Die Bundle-ID entsteht beim ersten Build und ist danach **dauerhaft**: Sie lässt sich für eine eingereichte App nicht mehr ändern. Ein anderer Wert bedeutet später eine neue App mit neuer Apple-ID – bestehende Installationen bekommen dann keine Updates. Für Android gilt dasselbe für `android.package` ab der ersten Veröffentlichung.
-- [x] **Entschieden am 17.09.2026:** `com.abdelkarim.hachibu`, eingetragen in `app.json` unter `ios.bundleIdentifier` **und** `android.package`. Der alte Wert `com.abdelkarim.allahumadiaet` stammte aus dem früheren Projektnamen und ist ersetzt, solange noch kein Build hochgeladen war.
-- Ab dem ersten `eas build` bleibt dieser Wert unverändert.
+- [x] **Entschieden am 17.09.2026:** `com.abdelkarim.hachibu`. Der alte Wert `com.abdelkarim.allahumadiaet` stammte aus dem früheren Projektnamen und wurde ersetzt, solange noch kein Build hochgeladen war.
+- Seit Version 2.0 steht der Wert in `project.yml`; das Widget hat die abgeleitete ID `com.abdelkarim.hachibu.widget` und die App Group heißt `group.com.abdelkarim.hachibu`. Alle drei bleiben unverändert.
 
 ## 3. URLs
 
@@ -54,7 +68,7 @@ Die Seiten liegen im Ordner `docs/` und werden über GitHub Pages veröffentlich
   - Impressum: `https://ing-bassam.github.io/AllahumaDiaet/impressum.html`
 - Die alten Adressen unter `abdelabu99-ai.github.io` bleiben erreichbar, bis das alte Konto abgeschaltet wird; sie werden nirgends mehr genannt.
 - [ ] Datenschutz-URL unter *App-Datenschutz* und Support-URL in der Versionsseite eintragen. Beide sind für jede App Pflicht. Laut Apple muss die Support-URL zu echten Kontaktinformationen führen.
-- [ ] Die gleichen URLs sind in der App hinterlegt (`src/legal/imprint.ts`). Ändern sie sich, dort anpassen.
+- [ ] Die gleichen URLs sind in der App hinterlegt (`Hachibu/Legal/LegalInfo.swift`). Ändern sie sich, dort anpassen.
 
 ## 4. App-Datenschutzangaben („Privacy Nutrition Label“)
 
@@ -65,9 +79,10 @@ Apple definiert „erfassen“ (collect) als: Daten verlassen das Gerät so, das
 Warum „Keine Daten erfasst“ in Frage kommt:
 
 - Profil, Gewicht, Tagebuch und selbst angelegte Produkte werden nur lokal in SQLite gespeichert. Es gibt keinen eigenen Server.
-- Keine Analyse-, Werbe-, Tracking- oder Crash-Reporting-SDKs (siehe `package.json`).
-- Barcode-Erkennung auf iOS läuft vollständig auf dem Gerät (AVFoundation/ZXing in `expo-camera`).
-- Das Privacy Manifest (`app.json` → `ios.privacyManifests`) meldet `NSPrivacyTracking: false` und keine erfassten Datentypen.
+- Keine Analyse-, Werbe-, Tracking- oder Crash-Reporting-SDKs. Einzige Fremdbibliothek ist GRDB.swift für SQLite (siehe `project.yml`).
+- Barcode-Erkennung läuft vollständig auf dem Gerät (AVFoundation).
+- Das Privacy Manifest (`Hachibu/PrivacyInfo.xcprivacy`) meldet `NSPrivacyTracking: false` und keine erfassten Datentypen.
+- Widget-Daten liegen in der App Group auf dem Gerät; die Datensicherung (ab 2.0) verlässt das Gerät nur über das Teilen-Menü auf Wunsch des Nutzers. Beides ist keine Erfassung durch den Anbieter.
 
 **Wichtiger Vorbehalt – Open Food Facts:**
 Beim Scannen gehen der Barcode und die IP-Adresse an die Open-Food-Facts-API, bei der **Online-Suche der eingegebene Suchbegriff** und die IP-Adresse an deren Suchdienst (search.openfoodfacts.org), beim Anzeigen von Produktbildern die IP-Adresse an deren Bildserver. Open Food Facts speichert IP-Adressen nach eigener Datenschutzerklärung in Server-Logs (dort angegeben: 3 Jahre, für Sicherheit, technische Analysen und Statistik).
@@ -78,7 +93,7 @@ Beim Scannen gehen der Barcode und die IP-Adresse an die Open-Food-Facts-API, be
 - Die lokale Suche, „Zuletzt verwendet“ und „Häufig gegessen“ bleiben auf dem Gerät und sind keine Erfassung.
 
 - [ ] Entscheiden. **Empfehlung: „Suchverlauf“ angeben** – nicht mit der Identität verknüpft, nicht für Tracking, Zweck „App-Funktionalität“. Das ist die vorsichtigere Variante und passt zu Abschnitt 5a der Datenschutzerklärung. Eine zu knappe Angabe ist ein häufiger Ablehnungsgrund nach Guideline 5.1.2, eine zu vorsichtige nicht.
-- [ ] Angaben, Datenschutzerklärung und (später) das Datensicherheits-Formular bei Google Play müssen dasselbe sagen. Wird eine Stelle geändert, die anderen mitziehen.
+- [ ] Angaben und Datenschutzerklärung müssen dasselbe sagen. Wird eine Stelle geändert, die andere mitziehen.
 
 ## 5. Altersfreigabe
 
@@ -89,7 +104,7 @@ Beim Scannen gehen der Barcode und die IP-Adresse an die Open-Food-Facts-API, be
   - **Gesundheits- oder Wellness-Themen:** Apple nennt ausdrücklich „Calorie tracking, dieting advice, or exercise recommendations“. Kalorien-Tracking ist die Kernfunktion → nicht „Keine“ angeben.
   - Medizinische oder Behandlungsinformationen: **Keine** (die App gibt keine Diagnosen, Medikamenten- oder Behandlungshinweise).
 - [ ] Ergebnis prüfen. Nach Apples Tabelle führen Gesundheits-/Wellness-Themen voraussichtlich zu mindestens **13+**. <!-- TODO: tatsächliche Einstufung nach dem Ausfüllen notieren. -->
-- Passt zur App: Die Berechnung ist ohnehin erst ab 18 Jahren freigegeben (`LIMITS.age` in `src/lib/nutrition.ts`).
+- Passt zur App: Die Berechnung ist ohnehin erst ab 18 Jahren freigegeben (`Nutrition.ageRange` in `Hachibu/Logic/Nutrition.swift`).
 
 ## 6. EU-Händlerstatus (Digital Services Act)
 
@@ -132,15 +147,15 @@ Kalorienzähler gibt es hunderte. Apple lehnt Apps ab, die sich von vorhandenen 
 
 Apple verlangt für Apps, die Gesundheitswerte berechnen, nachvollziehbare medizinische Grundlagen. Das ist abgedeckt:
 
-- `src/legal/sources.ts` enthält den Rechenweg in vier Schritten und vier Quellen: Mifflin-St Jeor (Am J Clin Nutr 1990), PAL-Faktoren der Deutschen Gesellschaft für Ernährung, S3-Leitlinie Adipositas (AWMF 050-001) für das Defizit, Verordnung (EU) 1169/2011 Anhang XIV für 4/4/9 kcal je Gramm.
+- `CalculationInfo` in `Hachibu/Legal/LegalInfo.swift` enthält den Rechenweg in fünf Schritten und vier Quellen: Mifflin-St Jeor (Am J Clin Nutr 1990), PAL-Faktoren der Deutschen Gesellschaft für Ernährung, S3-Leitlinie Adipositas (AWMF 050-001) für das Defizit, Verordnung (EU) 1169/2011 Anhang XIV für 4/4/9 kcal je Gramm.
 - In der App sichtbar unter *Info & Rechtliches → Berechnung & Quellen* mit Links, außerdem beim Anlegen des Profils.
 - Der Hinweis „Richtwerte für gesunde Erwachsene, ersetzt keine ärztliche oder ernährungsfachliche Beratung“ steht an beiden Stellen.
 - Keine Diagnosen, keine Behandlungs- oder Medikamentenhinweise, keine Messung von Vitalwerten.
-- Das Profil ist erst ab 18 Jahren möglich (`LIMITS.age` in `src/lib/nutrition.ts`), damit keine Kalorienziele für Kinder und Jugendliche berechnet werden.
+- Das Profil ist erst ab 18 Jahren möglich (`Nutrition.ageRange` in `Hachibu/Logic/Nutrition.swift`), damit keine Kalorienziele für Kinder und Jugendliche berechnet werden.
 
 ### Metadaten und Berechtigungen
 
-- [ ] Berechtigungstext prüfen: `NSCameraUsageDescription` entsteht aus dem `expo-camera`-Plugin in `app.json` und lautet „Die Kamera wird nur zum Scannen von Barcodes auf Lebensmitteln verwendet.“ Ein Text, der den Zweck nicht erklärt, ist ein klassischer Ablehnungsgrund (Guideline 5.1.1). Das Mikrofon ist im Plugin ausdrücklich abgeschaltet, deshalb fragt die App es nie ab.
+- [ ] Berechtigungstext prüfen: `NSCameraUsageDescription` steht in `project.yml` und lautet „Die Kamera wird nur zum Scannen von Barcodes auf Lebensmitteln verwendet.“ Ein Text, der den Zweck nicht erklärt, ist ein klassischer Ablehnungsgrund (Guideline 5.1.1). Mikrofon, Fotos oder Standort fragt die App nie ab, dafür gibt es keine Texte.
 - [ ] Screenshots ohne echte persönliche Daten, ohne Gerätrahmen mit fremden Marken und ohne Text, der im Store-Text nichts verspricht.
 - [ ] Keine Heilversprechen, keine Vergleiche mit anderen Apps, kein „Beta“, kein „Demo“, keine Platzhaltertexte in Store-Texten und in der App.
 - [ ] Support- und Datenschutz-URL müssen erreichbar sein, bevor du einreichst. Eine 404-Seite führt zuverlässig zur Ablehnung – GitHub Pages also vorher aktivieren.
@@ -151,10 +166,10 @@ Anforderungen laut Apple (Stand siehe oben):
 
 - 1 bis 10 Screenshots pro Displaygröße, Format `.png` oder `.jpg`, **ohne Alphakanal/Transparenz**.
 - **Pflicht:** Screenshots für das **6,5"-Display** (1284 × 2778 px Hochformat), sofern keine 6,9"-Screenshots geliefert werden. Einfacher: direkt **6,9"** liefern (1320 × 2868, 1290 × 2796 oder 1260 × 2736 px) – die kleineren Größen skaliert Apple dann herunter.
-- iPad-Screenshots sind nicht nötig, weil `ios.supportsTablet` auf `false` steht.
+- iPad-Screenshots sind nicht nötig, weil `TARGETED_DEVICE_FAMILY: "1"` (nur iPhone) in `project.yml` steht.
 
-Vorschlag für 5–6 Motive: Dashboard mit Kalorienring · Scanner · Eintragen mit Mengeneingabe · Suche mit „Zuletzt verwendet“ · Eintrag bearbeiten · Profil mit Tagesziel.
-<!-- TODO: Screenshots mit Beispieldaten erstellen (z. B. im iOS-Simulator über einen Mac-Dienst oder vom eigenen iPhone). Keine echten persönlichen Daten zeigen. -->
+Vorschlag für 6–8 Motive (Version 2.0): Tagebuch mit Kalorienring · Scanner · Eintragen mit Mengeneingabe · Suche mit Favoriten und „Zuletzt verwendet“ · Verlauf mit Wochenübersicht und Gewicht · Widget auf dem Homescreen · Profil mit Tagesziel · Datensicherung.
+<!-- TODO: Screenshots für 2.0 mit Beispieldaten vom eigenen iPhone (TestFlight-Build) erstellen; Bildschirmfotos des iPhone 15 Pro Max/16 Pro Max haben bereits 1290 × 2796 px. Keine echten persönlichen Daten zeigen. -->
 
 ## 9. Notizen für die App-Prüfung
 
@@ -184,12 +199,16 @@ Auf dem Startbildschirm die Lupe links neben „Scannen“ antippen, z. B. „Sp
 
 Weitere Funktionen:
 - Unbekannte Barcodes führen zu einem Formular, in dem Nährwerte einmalig manuell erfasst werden.
-- Ein Eintrag auf dem Startbildschirm lässt sich antippen und bearbeiten (Menge, Mahlzeit, Nährwerte).
-- In der Suche kann über „… als eigenes Lebensmittel anlegen“ ein Lebensmittel ohne Barcode angelegt werden.
-- Hat der Vortag Einträge, bietet die Startseite unter „Wie gestern eintragen“ an, fehlende Mahlzeiten zu übernehmen.
+- Ein Eintrag im Tagebuch lässt sich antippen und bearbeiten (Menge, Mahlzeit, Nährwerte).
+- „+“ rechts neben „Scannen“ öffnet den Schnelleintrag (nur Kalorien, z. B. im Restaurant).
+- In der Suche kann über „… als eigenes Lebensmittel anlegen“ ein Lebensmittel ohne Barcode angelegt werden; der Stern im Produkt-Screen markiert Favoriten.
+- Hat der Vortag Einträge, bietet das Tagebuch unter „Wie gestern eintragen“ an, fehlende Mahlzeiten zu übernehmen.
+- Tab „Verlauf“: Kalorien der letzten sieben Tage und Gewichtsverlauf (Gewicht über „Gewicht eintragen“).
+- Tab „Mehr“: Profil, Datensicherung (JSON-Datei und CSV über das Teilen-Menü, Einlesen über die Dateiauswahl), Info & Rechtliches.
+- Widgets (klein, mittel, Sperrbildschirm) zeigen die übrigen Kalorien; Tippen öffnet den Scanner (URL-Schema hachibu://scan).
 
 Die Kamera-Berechtigung wird nur für das Scannen von Barcodes verwendet.
-Daten löschen: Startbildschirm → „Info & Rechtliches“ → „Alle Daten löschen“.
+Daten löschen: Tab „Mehr“ → „Alle Daten löschen“.
 
 Berechnung des Kalorienziels (zu Guideline 1.4.1):
 - Grundumsatz nach Mifflin-St Jeor, Am J Clin Nutr 1990;51:241-247 (doi:10.1093/ajcn/51.2.241)
@@ -199,7 +218,7 @@ Berechnung des Kalorienziels (zu Guideline 1.4.1):
   zeigt die App einen sichtbaren Hinweis auf ärztliche oder ernährungsfachliche Beratung
 - Makronährstoffe mit 4/4/9 kcal je Gramm nach Verordnung (EU) 1169/2011 Anhang XIV
 
-Methode und Quellen sind in der App sichtbar: „Info & Rechtliches“ → „Berechnung & Quellen“,
+Methode und Quellen sind in der App sichtbar: Tab „Mehr“ → „Info & Rechtliches“ → „Berechnung & Quellen“,
 außerdem beim Anlegen des Profils. Die App stellt keine Diagnosen und gibt keine
 Behandlungsempfehlungen. Ein Hinweis auf ärztliche Beratung ist an beiden Stellen sichtbar.
 Ein Profil ist erst ab 18 Jahren möglich.
@@ -246,15 +265,21 @@ SCANNEN UND EINTRAGEN
 • Nährwerte korrigieren, wenn die Angaben nicht zur Verpackung passen
 
 SUCHEN STATT SCANNEN
-• Zuletzt verwendete und häufig gegessene Lebensmittel mit einem Tipp – auch offline
+• Favoriten, zuletzt verwendete und häufig gegessene Lebensmittel mit einem Tipp – auch offline
 • Online-Suche in Open Food Facts, wenn kein Barcode zur Hand ist
 • Eigene Lebensmittel ohne Barcode anlegen, z. B. selbst gekochte Gerichte
+• Schnelleintrag nur mit Kalorien, wenn es schnell gehen muss
 
 DEIN TAG AUF EINEN BLICK
 • Kalorienring mit verbleibenden Kalorien
 • Balken für Protein, Kohlenhydrate und Fett
 • Einträge nach Frühstück, Mittagessen, Abendessen und Snacks – antippen zum Bearbeiten
 • Mahlzeiten vom Vortag mit einem Tipp noch einmal eintragen
+• Widgets für Homescreen und Sperrbildschirm
+
+VERLAUF
+• Kalorien der letzten sieben Tage im Vergleich zum Tagesziel
+• Gewicht eintragen und den Verlauf sehen
 
 DEIN TAGESZIEL
 • Berechnung aus Alter, Größe, Gewicht, Zielgewicht und Aktivität
@@ -265,6 +290,7 @@ OHNE BALLAST
 • Kein Konto, keine Anmeldung
 • Keine Werbung, kein Tracking
 • Alle Einträge bleiben auf deinem Gerät
+• Sicherung als Datei, wann und wohin du willst
 • Alle Daten mit einem Tipp löschbar
 
 Die berechneten Werte sind Richtwerte und ersetzen keine ärztliche oder ernährungsfachliche Beratung.
@@ -272,30 +298,40 @@ Die berechneten Werte sind Richtwerte und ersetzen keine ärztliche oder ernähr
 Produktdaten und -bilder: Open Food Facts (ODbL / CC BY-SA).
 ```
 
+**Neue Funktionen in dieser Version** (Version 2.0, max. 4000 Zeichen):
+
+```text
+Hachibu ist von Grund auf neu – schneller, schöner und mit allem, was in Version 1 gefehlt hat:
+
+• Widgets für Homescreen und Sperrbildschirm: übrige Kalorien auf einen Blick, Tippen öffnet den Scanner
+• Favoriten in der Suche
+• Schnelleintrag nur mit Kalorien, z. B. im Restaurant
+• Verlauf: die letzten sieben Tage und dein Gewicht
+• Datensicherung als Datei und CSV-Export – du entscheidest, wohin
+• Kalender zum Springen auf jeden Tag
+• „Speichern & weiter scannen“ für den Wocheneinkauf
+
+Dein Tagebuch bleibt beim Update erhalten. Wie immer: kein Konto, keine Werbung, kein Tracking.
+```
+
 <!-- TODO: Texte final prüfen. Keine Aussagen wie „hilft beim Abnehmen“, „gesünder leben“ o. Ä. ergänzen. -->
 
-## 11. Build und Einreichen
+## 11. Build und Einreichen (seit 2.0 über GitHub Actions)
 
-Vorher, alles ohne Apple-Konto prüfbar:
+Vorher, ohne Apple-Konto prüfbar:
 
-- [ ] `npm test` und `npm run typecheck` laufen durch.
-- [ ] `npx expo-doctor` ohne Beanstandung.
-- [ ] `npx expo export --platform ios` baut das JS-Bundle fehlerfrei.
-- [x] `ios.supportsTablet: false` – dadurch prüft Apple nicht auf dem iPad und iPad-Screenshots entfallen. Wer später Tablets unterstützen will, braucht ein iPad-taugliches Layout **und** eigene Screenshots.
-- [x] `ios.config.usesNonExemptEncryption: false` – daraus wird `ITSAppUsesNonExemptEncryption` in der Info.plist. Die Frage zur Exportkontrolle ist damit beantwortet, ohne dass du sie bei jedem Build erneut ausfüllst. Korrekt, weil die App nur HTTPS des Betriebssystems nutzt und keine eigene Verschlüsselung enthält.
+- [ ] Der Workflow „Bauen und testen“ ist für den Branch grün (Actions-Tab). Er baut die App im Simulator und führt alle Tests aus.
+- [x] `TARGETED_DEVICE_FAMILY: "1"` in `project.yml` – nur iPhone, dadurch prüft Apple nicht auf dem iPad und iPad-Screenshots entfallen. Wer später Tablets unterstützen will, braucht ein iPad-taugliches Layout **und** eigene Screenshots.
+- [x] `ITSAppUsesNonExemptEncryption: false` in `project.yml` – die Frage zur Exportkontrolle ist damit beantwortet, ohne dass du sie bei jedem Build erneut ausfüllst. Korrekt, weil die App nur HTTPS des Betriebssystems nutzt und keine eigene Verschlüsselung enthält.
 
-Dann EAS (siehe README, Abschnitt „Veröffentlichen“):
+Dann der Upload (siehe README, Abschnitt „Veröffentlichen“):
 
-- [ ] `eas login` – **braucht deinen eigenen Expo-Zugang**, den ich nicht anlege und nicht eingebe.
-- [ ] `eas init` (`eas.json` liegt schon vor, `eas build:configure` entfällt). Danach den `slug` in `app.json` nicht mehr ändern.
-- [ ] `eas build --platform ios --profile production` – legt beim ersten Lauf Bundle-ID, Zertifikat und Provisioning-Profil an. Vorher Abschnitt 2b entscheiden.
-- [ ] **TestFlight-Test auf dem eigenen iPhone, bevor du einreichst** (*Internes Testen*, eigene Apple-ID als Tester). Zu prüfen: Kamera-Dialog samt Berechtigungstext, Splash-Screen, App-Icon auf dem Homescreen, Tastatur beim Ändern der Nährwerte, Tageswechsel, „Alle Daten löschen“. Ein Debug-Build im Expo Go verhält sich beim Splash-Screen und bei Berechtigungen anders als ein Release-Build – dieser Test ersetzt keine Ablehnung, verhindert aber die häufigsten.
-- [ ] `eas submit --platform ios --profile production`
+- [ ] Einmalig die drei Secrets `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` im Repository anlegen – **den API-Schlüssel erzeugst und einträgst du selbst**; er gehört nie ins Repository und nie in einen Chat.
+- [ ] GitHub → *Actions → „App Store Upload“ → Run workflow* auf `main`. Zertifikat und Provisioning-Profil legt Xcode mit dem Schlüssel selbst an. Die Build-Nummer ist `100 + Laufnummer` und damit immer größer als die 6 der Version 1.0.
+- [ ] **TestFlight-Test auf dem eigenen iPhone, bevor du einreichst** (*Internes Testen*, eigene Apple-ID als Tester). Zu prüfen: Tagebuch aus Version 1.0 noch da, Kamera-Dialog samt Berechtigungstext, App-Icon, Widget hinzufügen und Tippen darauf, „Fertig“-Taste über jeder Zahlentastatur, Tageswechsel, Sicherung erstellen und wieder einlesen, „Alle Daten löschen“.
 - [ ] Build in App Store Connect der Version zuordnen.
 - [ ] *Zur Prüfung einreichen*.
 
-## 12. Später: Google Play
+## 12. Android
 
-- [ ] `android.package` ist ab der ersten Veröffentlichung dauerhaft – dieselbe Entscheidung wie in Abschnitt 2b.
-- [ ] Das **Datensicherheits-Formular** muss die ML-Kit-Diagnosedaten von Google abbilden (siehe `docs/datenschutz.md`, Abschnitt 4) und zur Datenschutzerklärung passen.
-- [ ] Google verlangt für neue Entwicklerkonten einen Identitätsnachweis und bei Einzelpersonen einen Test mit mindestens zwölf Testern über zwei Wochen. Das ist ein eigener Vorgang nach dem App Store.
+Entfällt. Seit Version 2.0 ist Hachibu in SwiftUI geschrieben und läuft nur auf dem iPhone. Eine Android-Version wurde nie veröffentlicht.
