@@ -41,6 +41,18 @@ jobs:
       - name: Xcode-Projekt aus project.yml erzeugen
         run: xcodegen generate
 
+      - name: Nur iPhone prüfen
+        # Steht hier etwas anderes als 1, lehnt Apple den Upload ab (alle Ausrichtungen fürs iPad nötig).
+        run: |
+          for target in Hachibu HachibuWidget; do
+            fam=$(xcodebuild -project Hachibu.xcodeproj -target "$target" -configuration Release -showBuildSettings 2>/dev/null | awk -F' = ' '$1 ~ / TARGETED_DEVICE_FAMILY$/ {print $2}')
+            echo "$target: TARGETED_DEVICE_FAMILY=$fam"
+            if [ "$fam" != "1" ]; then
+              echo "::error::$target ist nicht auf 'nur iPhone' gestellt (TARGETED_DEVICE_FAMILY=$fam). Bitte in project.yml beim Target eintragen."
+              exit 1
+            fi
+          done
+
       - name: Pakete auflösen
         run: xcodebuild -resolvePackageDependencies -project Hachibu.xcodeproj -scheme Hachibu
 
