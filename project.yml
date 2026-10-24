@@ -9,6 +9,11 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
   xcodeVersion: "26.0"
+  # Dateiformat der Projektdatei (Xcode 15.0). Ohne diese Angabe schreibt XcodeGen das
+  # neueste Format, das erst ab Xcode 16 lesbar ist. Der Einrichtungs-Mac für Xcode Cloud
+  # (macOS 13, höchstens Xcode 15.2) muss das Projekt öffnen können; neuere Xcode-Versionen
+  # (Xcode Cloud, GitHub-Runner) lesen das ältere Format ohne Einschränkung.
+  projectFormat: xcode15_0
 
 settings:
   base:

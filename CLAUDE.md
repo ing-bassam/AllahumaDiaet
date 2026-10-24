@@ -17,7 +17,8 @@
 - Die Tests laufen im Workflow mit `xcodebuild test -scheme Hachibu -destination 'platform=iOS Simulator,name=iPhone 17'` (siehe `ci.yml`).
 - Upload in den App Store: Actions → „App Store Upload“ → Run workflow. Braucht die Secrets `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (Teamschlüssel mit Admin-Rolle) und einmalig die App Group `group.com.abdelkarim.hachibu` im Apple-Portal, beiden Bundle-IDs zugeordnet (README).
 - Xcodes automatische Signierung funktioniert auf dem Runner nicht: Im Konto ist kein Gerät registriert, und archivieren will immer zuerst ein Entwicklungsprofil. Deshalb fastlane mit manueller Signierung, nicht zurückbauen.
-- Für ein Update nur `MARKETING_VERSION` in `project.yml` erhöhen; die Build-Nummer setzt der Workflow (100 + Laufnummer).
+- Regulärer Upload seit Oktober 2026: Xcode Cloud (Workflow „TestFlight“ in App Store Connect, `ci_scripts/ci_post_clone.sh`, README „Hochladen mit Xcode Cloud“). Xcode Cloud signiert selbst; `release.yml` mit fastlane bleibt als Ausweichweg.
+- Für ein Update nur `MARKETING_VERSION` in `project.yml` erhöhen; die Build-Nummer setzt Xcode Cloud (ab 101) bzw. beim Ausweichweg der Workflow.
 
 ## Regeln
 - Kommentare, UI-Texte, Commit-Nachrichten und PR-Beschreibungen auf Deutsch, verständlich ohne IT-Hintergrund.

@@ -44,14 +44,25 @@ Das Widget teilt seine Daten mit der App über eine **App Group**. Die lässt si
 
 Fehlt die Widget-ID noch in der Liste, legt sie der erste Upload-Lauf selbst an und schaltet „App Groups“ ein; danach Schritt 2 für sie nachholen und den Upload erneut starten. Fehlt die Zuordnung, bricht der Upload mit einem deutschen Hinweis ab, bevor etwas hochgeladen wird.
 
-### Hochladen
+### Hochladen mit Xcode Cloud (regulärer Weg seit Oktober 2026)
+
+Apple baut die App selbst in der Cloud ([Xcode Cloud](https://developer.apple.com/xcode-cloud/)); 25 Rechenstunden pro Monat sind im Developer Program enthalten – **für alle Apps des Teams zusammen** (BIB Lito, Qinwan, Sinwan, Hachibu). Xcode Cloud braucht keine Secrets, es signiert mit dem Apple-Konto des Teams.
+
+- **Build starten:** [App Store Connect](https://appstoreconnect.apple.com) → oben **„Xcode Cloud“** → **„Hachibu“** → Reiter **„Builds“** → **„Build starten“** → Workflow **„TestFlight“** → „Weiter“ → Branch `main` → **„Build starten“**. Alternativ startet ein Tag `v2.1.0` (z. B. über eine GitHub-Release) den Build automatisch; die App bekommt dann die Version `2.1.0`. Ein Push auf `main` startet keinen Build.
+- **Ablauf:** `ci_scripts/ci_post_clone.sh` erzeugt das Projekt mit XcodeGen, löst die Swift-Pakete (GRDB) auf und trägt Version, Build-Nummer und Team nur in der Cloud-Kopie ein. Danach laufen die Tests im Simulator (iPhone 17), das Archiv wird gebaut und an die interne TestFlight-Gruppe verteilt – nur wenn die Tests grün sind.
+- **Ergebnisse:** im Reiter „Builds“ (grüner Haken / rotes Kreuz, Protokolle unter „Logs“) und als Prüfung am Commit auf GitHub; zusätzlich E-Mails von Apple.
+- **Verbrauch:** Reiter **„Nutzung“** im selben Produkt.
+- **Build-Nummer:** zählt Xcode Cloud. In *Xcode Cloud → Hachibu → Einstellungen → Build-Nummer* steht die „Nächste Build-Nummer“ auf 101 (letzter fastlane-Upload: 100). Das Skript bricht ein Archiv mit kleinerer Nummer sofort ab.
+- **Workflow ändern:** *Xcode Cloud → Hachibu → Workflows → TestFlight*, danach oben rechts „Sichern“.
+
+### Hochladen über GitHub (Ausweichweg)
 
 *Actions → „App Store Upload“ → Run workflow* (Branch `main`). [fastlane](https://fastlane.tools) (`fastlane/Fastfile`) erzeugt dabei ein Verteilungszertifikat und App-Store-Profile **nur für diesen Lauf**, signiert, lädt hoch, wartet, bis Apple den Build verarbeitet hat, und widerruft das Zertifikat danach wieder. So liegt nirgends ein dauerhaftes Zertifikat, auch nicht verschlüsselt. Apps im App Store und Builds in TestFlight bleiben davon unberührt, weil Apple sie selbst neu signiert. Ein Lauf dauert etwa 20 bis 45 Minuten; danach steht der Build in App Store Connect unter *TestFlight* und kann einer Version zugeordnet werden.
 
 ### Versionen
 
 - **Sichtbare Version** (`2.0.0`): `MARKETING_VERSION` in `project.yml`, für jedes Update von Hand erhöhen.
-- **Build-Nummer**: setzt der Upload automatisch auf die letzte Nummer in App Store Connect plus 1, mindestens 100 (die Expo-Builds gingen bis 6). Nicht von Hand eintragen.
+- **Build-Nummer**: setzt Xcode Cloud (ab 101, siehe oben); der GitHub-Ausweichweg nimmt automatisch die letzte Nummer in App Store Connect plus 1, mindestens 100 (die Expo-Builds gingen bis 6). Nicht von Hand eintragen.
 
 Alles außerhalb des Codes (Screenshots, Store-Texte, Datenschutzangaben, Altersfreigabe, Prüfnotizen) steht in [`docs/app-store-connect.md`](docs/app-store-connect.md).
 
