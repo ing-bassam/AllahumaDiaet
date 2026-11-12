@@ -2,7 +2,8 @@
 
 ## Zweck
 - Hachibu ist ein kostenloser Kalorien- und Nährwertzähler für Erwachsene, ohne Konto, Werbung und Tracking; alle Daten bleiben in SQLite auf dem iPhone.
-- Version 1.0 (React Native/Expo) ist seit 05.10.2026 im deutschen App Store. Version 2.0 ist die Neufassung in SwiftUI (nur iPhone, iOS 17+) und übernimmt die Datenbank der 1.0 unverändert. Android gibt es nicht mehr.
+- Version 1.0 (React Native/Expo) war seit 05.10.2026 im deutschen App Store. Version 2.0.0 (Build 100) ist die Neufassung in SwiftUI (nur iPhone, iOS 17+), seit 09.10.2026 im App Store, und übernimmt die Datenbank der 1.0 unverändert. Android gibt es nicht mehr. Die Store-Beschreibung ist noch der 1.0-Text (Widgets und Verlauf fehlen), beim nächsten Update erneuern.
+- Reste der Expo-Fassung (`node_modules/`, `.expo/`, `assets/`) liegen nur lokal und sind für die App ohne Bedeutung.
 
 ## Aufbau
 - `project.yml` – beschreibt das Xcode-Projekt; XcodeGen erzeugt daraus auf dem Runner `Hachibu.xcodeproj` (nicht eingecheckt). Version und Build-Nummer stehen hier (`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`).
